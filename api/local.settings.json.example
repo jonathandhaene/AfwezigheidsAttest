@@ -5,6 +5,10 @@
     "FUNCTIONS_WORKER_RUNTIME": "python",
     "AzureWebJobsFeatureFlags": "EnableWorkerIndexing",
     "AZURE_CONTENT_UNDERSTANDING_ENDPOINT": "https://your-resource-name.services.ai.azure.com/",
-    "AZURE_CONTENT_UNDERSTANDING_ANALYZER_ID": "your-analyzer-id"
+    "AZURE_CONTENT_UNDERSTANDING_ANALYZER_ID": "your-analyzer-id",
+    "SQL_SERVER": "sql-demo-server-sociale-fraude.database.windows.net",
+    "SQL_DATABASE": "sql-demo-database-sociale-fraude",
+    "SQL_USERNAME": "CloudSAd4543b78",
+    "SQL_PASSWORD": "{your_password}"
   }
 }
