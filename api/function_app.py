@@ -251,38 +251,3 @@ def process_attestation(req: func.HttpRequest) -> func.HttpResponse:
             mimetype="application/json",
             status_code=500
         )
-
-@app.route(route="attestation", methods=["GET", "POST"])
-def attestation(req: func.HttpRequest) -> func.HttpResponse:
-    """
-    Attestation endpoint - Handle absence attestations
-    GET /api/attestation - Retrieve attestations
-    POST /api/attestation - Create new attestation
-    """
-    logging.info('Attestation endpoint called')
-    
-    if req.method == "GET":
-        # TODO: Implement GET logic to retrieve attestations
-        return func.HttpResponse(
-            json.dumps({"attestations": []}),
-            mimetype="application/json",
-            status_code=200
-        )
-    
-    elif req.method == "POST":
-        try:
-            req_body = req.get_json()
-            # TODO: Implement POST logic to create attestation
-            logging.info(f"Received attestation request: {req_body}")
-            
-            return func.HttpResponse(
-                json.dumps({"message": "Attestation created", "id": "123"}),
-                mimetype="application/json",
-                status_code=201
-            )
-        except ValueError:
-            return func.HttpResponse(
-                json.dumps({"error": "Invalid JSON"}),
-                mimetype="application/json",
-                status_code=400
-            )
