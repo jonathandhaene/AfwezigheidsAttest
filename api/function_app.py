@@ -157,73 +157,68 @@ def validate_doctor_in_database(doctor_info: dict) -> dict:
 
 def extract_document_info(result: dict) -> dict:
     """
-    Extract relevant information from Content Understanding result
+    Extract relevant information from Content Understanding result using structured fields
     """
     extracted_data = {
-        "dates": [],
+        "patient_name": "",
+        "patient_national_number": "",
+        "incapacity_start_date": None,
+        "incapacity_end_date": None,
+        "certificate_date": None,
         "has_signature": False,
-        "text_content": "",
         "doctor_info": {
             "name": "",
-            "riziv": ""
-        }
+            "riziv": "",
+            "address": "",
+            "phone": ""
+        },
+        "summary": ""
     }
     
     try:
-        # Get the analysis result
+        # Get the analysis result and structured fields
         analyze_result = result.get("analyzeResult", {})
-        
-        # Extract text content from all pages
-        contents = analyze_result.get("contents", [])
-        if contents and len(contents) > 0:
-            pages = contents[0].get("pages", [])
-            for page in pages:
-                lines = page.get("lines", [])
-                for line in lines:
-                    content = line.get("content", "")
-                    extracted_data["text_content"] += content + " "
-        
-        # Look for date patterns in the text
-        text = extracted_data["text_content"].lower()
-        
-        # Check for common Dutch date keywords
-        date_keywords = ["datum", "date", "van", "tot", "vanaf", "t/m", "periode"]
-        for keyword in date_keywords:
-            if keyword in text:
-                # Try to extract dates near these keywords
-                # This is a simplified approach - you may want more sophisticated date extraction
-                extracted_data["dates"].append({
-                    "field": keyword,
-                    "value": "Gevonden in document"
-                })
-        
-        # Check for signature indicators
-        signature_keywords = ["handtekening", "signature", "getekend", "signed", "ondertekend"]
-        for keyword in signature_keywords:
-            if keyword in text:
-                extracted_data["has_signature"] = True
-                break
-        
-        # Also check for signature field in structured fields if available
         fields = analyze_result.get("fields", {})
-        if "Signature" in fields or "Handtekening" in fields:
-            extracted_data["has_signature"] = True
         
-        # Extract doctor information from text
-        # Look for RIZIV number patterns (typically 5 digits followed by 2 digits)
-        import re
-        riziv_pattern = r'RIZIV[:\s]*([0-9]{5}[-/]?[0-9]{2})'
-        riziv_match = re.search(riziv_pattern, extracted_data["text_content"], re.IGNORECASE)
-        if riziv_match:
-            extracted_data["doctor_info"]["riziv"] = riziv_match.group(1)
+        # Extract patient information
+        if "PatientName" in fields:
+            extracted_data["patient_name"] = fields["PatientName"].get("valueString", "")
         
-        # Look for doctor name patterns (Dr., Arts, etc.)
-        doctor_pattern = r'(?:Dr\.|Arts|Doctor)[\s]*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)'
-        doctor_match = re.search(doctor_pattern, extracted_data["text_content"])
-        if doctor_match:
-            extracted_data["doctor_info"]["name"] = doctor_match.group(1)
+        if "PatientNationalNumber" in fields:
+            extracted_data["patient_national_number"] = fields["PatientNationalNumber"].get("valueString", "")
         
-        logging.info(f"Extracted {len(extracted_data['dates'])} date references, signature: {extracted_data['has_signature']}, doctor: {extracted_data['doctor_info']['name']}")
+        # Extract incapacity dates
+        if "IncapacityStartDate" in fields:
+            extracted_data["incapacity_start_date"] = fields["IncapacityStartDate"].get("valueDate", None)
+        
+        if "IncapacityEndDate" in fields:
+            extracted_data["incapacity_end_date"] = fields["IncapacityEndDate"].get("valueDate", None)
+        
+        if "CertificateDate" in fields:
+            extracted_data["certificate_date"] = fields["CertificateDate"].get("valueDate", None)
+        
+        # Extract doctor signature
+        if "DoctorHasSigned" in fields:
+            extracted_data["has_signature"] = fields["DoctorHasSigned"].get("valueBoolean", False)
+        
+        # Extract doctor information
+        if "DoctorName" in fields:
+            extracted_data["doctor_info"]["name"] = fields["DoctorName"].get("valueString", "")
+        
+        if "DoctorRizivNumber" in fields:
+            extracted_data["doctor_info"]["riziv"] = fields["DoctorRizivNumber"].get("valueString", "")
+        
+        if "DoctorAddress" in fields:
+            extracted_data["doctor_info"]["address"] = fields["DoctorAddress"].get("valueString", "")
+        
+        if "DoctorPhoneNumber" in fields:
+            extracted_data["doctor_info"]["phone"] = fields["DoctorPhoneNumber"].get("valueString", "")
+        
+        # Extract summary
+        if "Summary" in fields:
+            extracted_data["summary"] = fields["Summary"].get("valueString", "")
+        
+        logging.info(f"Extracted structured data - Patient: {extracted_data['patient_name']}, Doctor: {extracted_data['doctor_info']['name']}, RIZIV: {extracted_data['doctor_info']['riziv']}, Signature: {extracted_data['has_signature']}")
         
     except Exception as e:
         logging.error(f"Error extracting document info: {str(e)}")
@@ -232,35 +227,48 @@ def extract_document_info(result: dict) -> dict:
 
 def validate_attestation(extracted_data: dict, file_name: str) -> dict:
     """
-    Validate the attestation based on extracted data
+    Validate the attestation based on extracted structured data
     """
     today = date.today()
     validation_errors = []
-    future_dates = []
+    validation_warnings = []
     
-    # Check for future dates in the extracted text
-    # Try to find and parse actual dates from the text
-    text_words = extracted_data["text_content"].split()
-    for i, word in enumerate(text_words):
+    # Check incapacity start date
+    if extracted_data.get("incapacity_start_date"):
         try:
-            # Try to parse potential date strings
-            if len(word) >= 8 and any(char.isdigit() for char in word):
-                parsed_date = parser.parse(word, dayfirst=True, fuzzy=True)
-                
-                # Only consider dates that seem realistic (not year 0, etc.)
-                if 2020 <= parsed_date.year <= 2030 and parsed_date.date() > today:
-                    future_dates.append({
-                        "date": parsed_date.strftime("%d-%m-%Y")
-                    })
-                    validation_errors.append(
-                        f"Het document bevat een toekomstige datum: {parsed_date.strftime('%d-%m-%Y')}"
-                    )
-        except (ValueError, TypeError, parser.ParserError):
-            continue
+            start_date = parser.parse(extracted_data["incapacity_start_date"]).date()
+            if start_date > today:
+                validation_errors.append(
+                    f"Onmogelijheid startdatum ligt in de toekomst: {start_date.strftime('%d-%m-%Y')}"
+                )
+        except (ValueError, TypeError, parser.ParserError) as e:
+            logging.warning(f"Could not parse incapacity start date: {e}")
+    
+    # Check incapacity end date
+    if extracted_data.get("incapacity_end_date"):
+        try:
+            end_date = parser.parse(extracted_data["incapacity_end_date"]).date()
+            if end_date > today:
+                validation_warnings.append(
+                    f"Onmogelijheid einddatum ligt in de toekomst: {end_date.strftime('%d-%m-%Y')} (dit kan geldig zijn)"
+                )
+        except (ValueError, TypeError, parser.ParserError) as e:
+            logging.warning(f"Could not parse incapacity end date: {e}")
+    
+    # Check certificate date
+    if extracted_data.get("certificate_date"):
+        try:
+            cert_date = parser.parse(extracted_data["certificate_date"]).date()
+            if cert_date > today:
+                validation_errors.append(
+                    f"Certificaat datum ligt in de toekomst: {cert_date.strftime('%d-%m-%Y')}"
+                )
+        except (ValueError, TypeError, parser.ParserError) as e:
+            logging.warning(f"Could not parse certificate date: {e}")
     
     # Check for signature
     if not extracted_data["has_signature"]:
-        validation_errors.append("Er ontbreekt een handtekening op het document")
+        validation_errors.append("Er ontbreekt een handtekening van de arts op het document")
     
     # Validate doctor information in database
     doctor_validation = validate_doctor_in_database(extracted_data.get("doctor_info", {}))
@@ -286,28 +294,54 @@ def validate_attestation(extracted_data: dict, file_name: str) -> dict:
     
     # Build result
     if is_valid:
+        details = {
+            "Bestandsnaam": file_name,
+            "Verwerkt op": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
+            "Status": "Goedgekeurd",
+            "Patiënt": extracted_data.get("patient_name", "Onbekend"),
+            "Arts": extracted_data["doctor_info"].get("name", "Onbekend"),
+            "RIZIV Nummer": extracted_data["doctor_info"].get("riziv", "Niet gevonden")
+        }
+        
+        if extracted_data.get("incapacity_start_date"):
+            details["Onmogelijkheid vanaf"] = extracted_data["incapacity_start_date"]
+        
+        if extracted_data.get("incapacity_end_date"):
+            details["Onmogelijkheid tot"] = extracted_data["incapacity_end_date"]
+        
+        if extracted_data.get("summary"):
+            details["Samenvatting"] = extracted_data["summary"]
+        
+        if validation_warnings:
+            details["Waarschuwingen"] = validation_warnings
+        
         return {
             "valid": True,
             "message": "✓ Uw afwezigheidsattest is geldig en geaccepteerd.",
-            "details": {
-                "Bestandsnaam": file_name,
-                "Verwerkt op": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
-                "Status": "Goedgekeurd",
-                "Handtekening aanwezig": "Ja"
-            }
+            "details": details
         }
     else:
+        details = {
+            "Bestandsnaam": file_name,
+            "Verwerkt op": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
+            "Status": "Afgekeurd",
+            "Aantal fouten": len(validation_errors),
+            "Patiënt": extracted_data.get("patient_name", "Onbekend"),
+            "Arts": extracted_data["doctor_info"].get("name", "Onbekend"),
+            "RIZIV Nummer": extracted_data["doctor_info"].get("riziv", "Niet gevonden"),
+            "Handtekening aanwezig": "Ja" if extracted_data["has_signature"] else "Nee"
+        }
+        
+        if extracted_data.get("incapacity_start_date"):
+            details["Onmogelijkheid vanaf"] = extracted_data["incapacity_start_date"]
+        
+        if extracted_data.get("incapacity_end_date"):
+            details["Onmogelijkheid tot"] = extracted_data["incapacity_end_date"]
+        
         return {
             "valid": False,
             "message": "✗ Uw afwezigheidsattest is ongeldig om de volgende redenen:\n\n" + "\n".join(f"• {error}" for error in validation_errors),
-            "details": {
-                "Bestandsnaam": file_name,
-                "Verwerkt op": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
-                "Status": "Afgekeurd",
-                "Aantal fouten": len(validation_errors),
-                "Handtekening aanwezig": "Ja" if extracted_data["has_signature"] else "Nee",
-                "Toekomstige datums gevonden": len(future_dates)
-            }
+            "details": details
         }
 
 @app.route(route="health", methods=["GET"])
