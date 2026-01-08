@@ -1,0 +1,15 @@
+# Azure Developer CLI (azd) configuration
+name: afwezigheidsattest
+metadata:
+  template: afwezigheidsattest@0.0.1
+
+services:
+  web:
+    project: ./frontend
+    language: js
+    host: staticwebapp
+    
+  api:
+    project: ./api
+    language: python
+    host: function
