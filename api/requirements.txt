@@ -3,6 +3,7 @@ azure-functions>=1.18.0
 
 # Azure AI Services
 azure-identity>=1.15.0
+azure-identity-broker>=1.0.0
 requests>=2.31.0
 
 # Database connectivity

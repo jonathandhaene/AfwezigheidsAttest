@@ -6,6 +6,8 @@ function App() {
   const [uploading, setUploading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
+  const [progressStep, setProgressStep] = useState(0) // 0: idle, 1: uploading, 2: analyzing, 3: checking, 4: fraud check, 5: complete
+  const [failedStep, setFailedStep] = useState(null) // Track which step failed
 
   const handleFileChange = (event) => {
     const file = event.target.files[0]
@@ -13,6 +15,8 @@ function App() {
       setSelectedFile(file)
       setResult(null)
       setError(null)
+      setProgressStep(0)
+      setFailedStep(null)
     }
   }
 
@@ -25,10 +29,15 @@ function App() {
     setUploading(true)
     setError(null)
     setResult(null)
+    setProgressStep(1) // Uploading
 
     try {
       const formData = new FormData()
       formData.append('file', selectedFile)
+
+      // Simulate upload step
+      await new Promise(resolve => setTimeout(resolve, 800))
+      setProgressStep(2) // Analyzing
 
       const response = await fetch('/api/process-attestation', {
         method: 'POST',
@@ -39,11 +48,26 @@ function App() {
         throw new Error(`Fout bij verwerking: ${response.statusText}`)
       }
 
+      // Simulate analysis step
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      setProgressStep(3) // Background check
+
       const data = await response.json()
+      
+      // Simulate background check step
+      await new Promise(resolve => setTimeout(resolve, 800))
+      setProgressStep(4) // Fraud case check
+      
+      // Simulate fraud case processing
+      await new Promise(resolve => setTimeout(resolve, 600))
+      setProgressStep(5) // Complete
+      
       setResult(data)
     } catch (err) {
       console.error('Upload error:', err)
       setError(err.message || 'Er is een fout opgetreden bij het uploaden van het bestand')
+      setFailedStep(progressStep) // Mark current step as failed
+      // Don't reset progressStep so user can see where it failed
     } finally {
       setUploading(false)
     }
@@ -107,6 +131,58 @@ function App() {
                   )}
                 </button>
 
+                {/* Progress Steps Indicator */}
+                {progressStep > 0 && (
+                  <div className="progress-container mb-4">
+                    <div className="progress-steps">
+                      {/* Step 1: Uploading */}
+                      <div className={`progress-step ${progressStep >= 1 ? 'active' : ''} ${progressStep > 1 && failedStep !== 1 ? 'completed' : ''} ${failedStep === 1 ? 'failed' : ''}`}>
+                        <div className="step-circle">
+                          {failedStep === 1 ? '✕' : progressStep > 1 ? '✓' : '1'}
+                        </div>
+                        <div className="step-label">Uploaden</div>
+                      </div>
+                      
+                      {/* Step 2: Analyzing */}
+                      <div className={`progress-step ${progressStep >= 2 ? 'active' : ''} ${progressStep > 2 && failedStep !== 2 ? 'completed' : ''} ${failedStep === 2 ? 'failed' : ''}`}>
+                        <div className="step-circle">
+                          {failedStep === 2 ? '✕' : progressStep > 2 ? '✓' : '2'}
+                        </div>
+                        <div className="step-label">Analyseren</div>
+                      </div>
+                      
+                      {/* Step 3: Background Check */}
+                      <div className={`progress-step ${progressStep >= 3 ? 'active' : ''} ${progressStep > 3 && failedStep !== 3 ? 'completed' : ''} ${failedStep === 3 ? 'failed' : ''}`}>
+                        <div className="step-circle">
+                          {failedStep === 3 ? '✕' : progressStep > 3 ? '✓' : '3'}
+                        </div>
+                        <div className="step-label">Verificatie</div>
+                      </div>
+                      
+                      {/* Step 4: Fraud Check */}
+                      <div className={`progress-step ${progressStep >= 4 ? 'active' : ''} ${progressStep > 4 && failedStep !== 4 ? 'completed' : ''} ${failedStep === 4 ? 'failed' : ''}`}>
+                        <div className="step-circle">
+                          {failedStep === 4 ? '✕' : progressStep > 4 ? '✓' : '4'}
+                        </div>
+                        <div className="step-label">Fraudecheck</div>
+                      </div>
+                      
+                      {/* Step 5: Complete */}
+                      <div className={`progress-step ${progressStep >= 5 ? 'active completed' : ''} ${failedStep === 5 ? 'failed' : ''}`}>
+                        <div className="step-circle">
+                          {failedStep === 5 ? '✕' : progressStep >= 5 ? '✓' : '5'}
+                        </div>
+                        <div className="step-label">Resultaat</div>
+                      </div>
+                    </div>
+                    
+                    {/* Animated Progress Bar */}
+                    <div className="progress-bar-container">
+                      <div className={`progress-bar-fill ${failedStep ? 'failed' : ''}`} style={{ width: `${(progressStep / 5) * 100}%` }}></div>
+                    </div>
+                  </div>
+                )}
+
                 {error && (
                   <div className="alert alert-danger" role="alert">
                     <strong>Fout:</strong> {error}
@@ -121,39 +197,59 @@ function App() {
                       </h5>
                     </div>
                     <div className="card-body">
-                      {/* Overall Status */}
-                      <div className="mb-4 text-center">
-                        <h4 className={`mb-2 ${result.valid ? 'text-success' : 'text-danger'}`}>
-                          <span className={`badge ${result.valid ? 'bg-success' : 'bg-danger'} fs-5 px-4 py-2`}>
-                            {result.valid ? '✓ GELDIG' : '✗ ONGELDIG'}
-                          </span>
-                        </h4>
-                        {result.message && (
-                          <div className={`alert ${result.valid ? 'alert-success' : 'alert-danger'} mt-3`} role="alert">
-                            <div style={{ whiteSpace: 'pre-line' }}>
-                              {result.message}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
                       {result.details && Object.keys(result.details).length > 0 && (
                         <div className="row g-3">
+                          {/* Rejection Reason (shown at top when fraud detected) */}
+                          {result.details.Reden && !result.details.Fouten && (
+                            <div className="col-12">
+                              <div className="alert alert-danger mb-0" role="alert">
+                                <h6 className="alert-heading mb-2">🔒 Reden van afkeuring</h6>
+                                <ul className="mb-0">
+                                  {result.details.Reden.split('.').filter(item => item.trim()).map((item, index) => (
+                                    <li key={index}>{item.trim()}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Errors Section (Validation Errors - shown at top when validation fails) */}
+                          {result.details.Fouten && Array.isArray(result.details.Fouten) && result.details.Fouten.length > 0 && (
+                            <div className="col-12">
+                              <div className="alert alert-danger mb-0" role="alert">
+                                <h6 className="alert-heading mb-2">❌ Validatiefouten</h6>
+                                <ul className="mb-0">
+                                  {result.details.Fouten.map((error, index) => (
+                                    <li key={index}>{error}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          )}
+
                           {/* File Information Section */}
                           {(result.details.Bestandsnaam || result.details['Verwerkt op']) && (
                             <div className="col-12">
                               <div className="card bg-light">
                                 <div className="card-header bg-secondary text-white">
                                   <h6 className="mb-0">
-                                    <i className="bi bi-file-earmark-text"></i> 📄 Bestandsinformatie
+                                    <i className="bi bi-info-circle"></i> ℹ️ Informatie
                                   </h6>
                                 </div>
                                 <div className="card-body">
                                   <table className="table table-sm table-borderless mb-0">
                                     <tbody>
+                                      {result.details['Zaak ID'] && (
+                                        <tr>
+                                          <td className="fw-bold" style={{width: '40%'}}>Zaak ID:</td>
+                                          <td>
+                                            <span className="badge bg-warning text-dark">{result.details['Zaak ID']}</span>
+                                          </td>
+                                        </tr>
+                                      )}
                                       {result.details.Bestandsnaam && (
                                         <tr>
-                                          <td className="fw-bold" style={{width: '40%'}}>Bestandsnaam:</td>
+                                          <td className="fw-bold">Bestandsnaam:</td>
                                           <td>{result.details.Bestandsnaam}</td>
                                         </tr>
                                       )}
@@ -192,12 +288,32 @@ function App() {
                                 <div className="card-body">
                                   <table className="table table-sm table-borderless mb-0">
                                     <tbody>
-                                      {result.details['Patiënt'] && (
-                                        <tr>
-                                          <td className="fw-bold" style={{width: '40%'}}>Naam:</td>
-                                          <td>{result.details['Patiënt']}</td>
-                                        </tr>
-                                      )}
+                                      <tr>
+                                        <td className="fw-bold" style={{width: '40%'}}>Naam:</td>
+                                        <td>{result.details['Patiënt'] || 'Niet beschikbaar'}</td>
+                                      </tr>
+                                      <tr>
+                                        <td className="fw-bold">Rijksregisternummer:</td>
+                                        <td>
+                                          {result.details['Rijksregisternummer'] ? (
+                                            <code className="text-primary">{result.details['Rijksregisternummer']}</code>
+                                          ) : (
+                                            <span className="text-muted">Niet beschikbaar</span>
+                                          )}
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <td className="fw-bold">Geboortedatum:</td>
+                                        <td>{result.details['Geboortedatum'] || <span className="text-muted">Niet beschikbaar</span>}</td>
+                                      </tr>
+                                      <tr>
+                                        <td className="fw-bold">Adres:</td>
+                                        <td>{result.details['Adres patiënt'] || <span className="text-muted">Niet beschikbaar</span>}</td>
+                                      </tr>
+                                      <tr>
+                                        <td className="fw-bold">Postcode en gemeente:</td>
+                                        <td>{result.details['Postcode en gemeente patiënt'] || <span className="text-muted">Niet beschikbaar</span>}</td>
+                                      </tr>
                                     </tbody>
                                   </table>
                                 </div>
@@ -217,26 +333,38 @@ function App() {
                                 <div className="card-body">
                                   <table className="table table-sm table-borderless mb-0">
                                     <tbody>
-                                      {result.details.Arts && (
-                                        <tr>
-                                          <td className="fw-bold" style={{width: '40%'}}>Arts:</td>
-                                          <td>{result.details.Arts}</td>
-                                        </tr>
-                                      )}
-                                      {result.details['RIZIV Nummer'] && (
-                                        <tr>
-                                          <td className="fw-bold">RIZIV Nummer:</td>
-                                          <td>
+                                      <tr>
+                                        <td className="fw-bold" style={{width: '40%'}}>Naam:</td>
+                                        <td>{result.details.Arts || <span className="text-muted">Niet beschikbaar</span>}</td>
+                                      </tr>
+                                      <tr>
+                                        <td className="fw-bold">RIZIV Nummer:</td>
+                                        <td>
+                                          {result.details['RIZIV Nummer'] ? (
                                             <code className="text-primary">{result.details['RIZIV Nummer']}</code>
-                                          </td>
-                                        </tr>
-                                      )}
-                                      {result.details['Handtekening aanwezig'] && (
+                                          ) : (
+                                            <span className="text-muted">Niet beschikbaar</span>
+                                          )}
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <td className="fw-bold">Adres:</td>
+                                        <td>{result.details['Adres arts'] || <span className="text-muted">Niet beschikbaar</span>}</td>
+                                      </tr>
+                                      <tr>
+                                        <td className="fw-bold">Postcode en gemeente:</td>
+                                        <td>{result.details['Postcode en gemeente arts'] || <span className="text-muted">Niet beschikbaar</span>}</td>
+                                      </tr>
+                                      <tr>
+                                        <td className="fw-bold">Telefoonnummer:</td>
+                                        <td>{result.details['Telefoonnummer arts'] || <span className="text-muted">Niet beschikbaar</span>}</td>
+                                      </tr>
+                                      {(result.details['Handtekening aanwezig'] || result.details['Handtekening']) && (
                                         <tr>
                                           <td className="fw-bold">Handtekening:</td>
                                           <td>
-                                            <span className={`badge ${result.details['Handtekening aanwezig'] === 'Ja' ? 'bg-success' : 'bg-warning'}`}>
-                                              {result.details['Handtekening aanwezig'] === 'Ja' ? '✓ Ja' : '✗ Nee'}
+                                            <span className={`badge ${(result.details['Handtekening aanwezig'] === 'Ja' || result.details['Handtekening'] === 'Ja') ? 'bg-success' : 'bg-warning'}`}>
+                                              {(result.details['Handtekening aanwezig'] === 'Ja' || result.details['Handtekening'] === 'Ja') ? '✓ Ja' : '✗ Nee'}
                                             </span>
                                           </td>
                                         </tr>
@@ -249,7 +377,7 @@ function App() {
                           )}
 
                           {/* Incapacity Period Section */}
-                          {(result.details['Onmogelijkheid vanaf'] || result.details['Onmogelijkheid tot']) && (
+                          {(result.details['Onmogelijkheid vanaf'] || result.details['Onmogelijkheid tot'] || result.details['Mag huis verlaten']) && (
                             <div className="col-12">
                               <div className="card bg-light">
                                 <div className="card-header bg-warning text-dark">
@@ -270,6 +398,16 @@ function App() {
                                         <tr>
                                           <td className="fw-bold">Tot:</td>
                                           <td>{result.details['Onmogelijkheid tot']}</td>
+                                        </tr>
+                                      )}
+                                      {result.details['Mag huis verlaten'] && (
+                                        <tr>
+                                          <td className="fw-bold">Mag huis verlaten:</td>
+                                          <td>
+                                            <span className={`badge ${result.details['Mag huis verlaten'] === 'Ja' ? 'bg-success' : 'bg-secondary'}`}>
+                                              {result.details['Mag huis verlaten']}
+                                            </span>
+                                          </td>
                                         </tr>
                                       )}
                                     </tbody>
@@ -309,24 +447,14 @@ function App() {
                             </div>
                           )}
 
-                          {/* Errors Section */}
-                          {result.details.Fouten && Array.isArray(result.details.Fouten) && result.details.Fouten.length > 0 && (
-                            <div className="col-12">
-                              <div className="alert alert-danger mb-0" role="alert">
-                                <h6 className="alert-heading mb-2">❌ Fouten</h6>
-                                <ul className="mb-0">
-                                  {result.details.Fouten.map((error, index) => (
-                                    <li key={index}>{error}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </div>
-                          )}
-
+                          {/* Reason for Rejection (Security/Fraud) */}
                           {/* Other Details */}
                           {Object.entries(result.details)
-                            .filter(([key]) => !['Bestandsnaam', 'Verwerkt op', 'Status', 'Patiënt', 'Arts', 'RIZIV Nummer', 
-                                                  'Handtekening aanwezig', 'Onmogelijkheid vanaf', 'Onmogelijkheid tot', 
+                            .filter(([key]) => !['Bestandsnaam', 'Verwerkt op', 'Status', 'Patiënt', 'Rijksregisternummer', 
+                                                  'Geboortedatum', 'Adres patiënt', 'Postcode en gemeente patiënt',
+                                                  'Arts', 'RIZIV Nummer', 'Adres arts', 'Postcode en gemeente arts', 
+                                                  'Telefoonnummer arts', 'Handtekening aanwezig', 'Handtekening',
+                                                  'Onmogelijkheid vanaf', 'Onmogelijkheid tot', 'Mag huis verlaten',
                                                   'Samenvatting', 'Waarschuwingen', 'Fouten', 'Reden', 'Aantal fouten'].includes(key))
                             .length > 0 && (
                             <div className="col-12">
@@ -340,8 +468,11 @@ function App() {
                                   <table className="table table-sm table-borderless mb-0">
                                     <tbody>
                                       {Object.entries(result.details)
-                                        .filter(([key]) => !['Bestandsnaam', 'Verwerkt op', 'Status', 'Patiënt', 'Arts', 'RIZIV Nummer', 
-                                                              'Handtekening aanwezig', 'Onmogelijkheid vanaf', 'Onmogelijkheid tot', 
+                                        .filter(([key]) => !['Bestandsnaam', 'Verwerkt op', 'Status', 'Patiënt', 'Rijksregisternummer',
+                                                              'Geboortedatum', 'Adres patiënt', 'Postcode en gemeente patiënt',
+                                                              'Arts', 'RIZIV Nummer', 'Adres arts', 'Postcode en gemeente arts',
+                                                              'Telefoonnummer arts', 'Handtekening aanwezig', 'Handtekening',
+                                                              'Onmogelijkheid vanaf', 'Onmogelijkheid tot', 'Mag huis verlaten',
                                                               'Samenvatting', 'Waarschuwingen', 'Fouten', 'Reden', 'Aantal fouten'].includes(key))
                                         .map(([key, value]) => (
                                           <tr key={key}>
