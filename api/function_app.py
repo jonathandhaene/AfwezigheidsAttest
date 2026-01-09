@@ -7,7 +7,7 @@ import azure.functions as func
 import logging
 import json
 from datetime import datetime
-from document_service import analyze_document_with_content_understanding
+from controllers.attestation_controller import process_attestation as process_attestation_controller
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
@@ -54,8 +54,8 @@ def process_attestation(req: func.HttpRequest) -> func.HttpResponse:
         
         logging.info(f"Received file: {file_name}, size: {file_size} bytes")
         
-        # Analyze document with Azure Content Understanding
-        validation_result = analyze_document_with_content_understanding(file_content, file_name)
+        # Process attestation through controller (orchestration layer)
+        validation_result = process_attestation_controller(file_content, file_name)
         
         # Add file size to details
         if "details" in validation_result:

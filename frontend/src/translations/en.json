@@ -1,0 +1,96 @@
+{
+  "app": {
+    "title": "Absence Certificate Validation",
+    "subtitle": "Online Portal"
+  },
+  "welcome": {
+    "title": "Welcome!",
+    "description": "Upload your absence certificate to have it automatically processed and validated by our AI. The system verifies the validity of your certificate and provides immediate feedback."
+  },
+  "upload": {
+    "label": "Select your absence certificate",
+    "button": "Choose File",
+    "selected": "Selected file: {filename}",
+    "submitButton": "Upload and Validate",
+    "processing": "Processing...",
+    "error": "Please select a file first"
+  },
+  "steps": {
+    "uploading": "Uploading",
+    "analyzing": "Analysing",
+    "verification": "Verification",
+    "fraudCheck": "Fraud Check",
+    "result": "Result"
+  },
+  "processStatus": {
+    "title": "PROCESS STATUS",
+    "showDetails": "Show process details",
+    "hideDetails": "Hide process details",
+    "fileSelected": "📄 File selected: {filename} ({size} KB)",
+    "uploading": "📤 Document is being uploaded to server...",
+    "analyzingStart": "🤖 Starting AI analysis via Azure Content Understanding...",
+    "analyzingComplete": "✅ AI analysis completed - data extracted",
+    "validatingDoctor": "🔍 Validating doctor in RIZIV database...",
+    "validationComplete": "✅ Database verification completed",
+    "fraudCheck": "⚠️ Checking for fraud indicators...",
+    "allChecksComplete": "✅ All checks completed",
+    "documentValid": "✅ Document is valid - no issues found",
+    "documentInvalid": "❌ Document contains errors or is invalid",
+    "error": "❌ Error: {message}"
+  },
+  "results": {
+    "validTitle": "Validation Result",
+    "invalidTitle": "Validation Result",
+    "errorTitle": "Error:",
+    "rejectionReason": "Rejection Reason",
+    "validationErrors": "Validation Errors",
+    "warnings": "Warnings",
+    "generalInfo": "Case Created",
+    "caseInfo": "Case Created",
+    "summary": "Summary",
+    "patientInfo": "Patient Information",
+    "doctorInfo": "Doctor Information",
+    "attestInfo": "Certificate Details",
+    "fields": {
+      "caseId": "Case ID",
+      "filename": "Filename",
+      "processedOn": "Processed On",
+      "status": "Status",
+      "name": "Name",
+      "nationalNumber": "National Number",
+      "birthdate": "Birthdate",
+      "address": "Address",
+      "postalCode": "Postal Code and City",
+      "phone": "Phone Number",
+      "rizivNumber": "RIZIV Number",
+      "signature": "Signature",
+      "from": "From",
+      "to": "To",
+      "leaveHome": "May Leave Home",
+      "notAvailable": "Not Available",      "yes": "Yes",
+      "no": "No",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "patientName": "Patient Name",
+      "patientBirthdate": "Birthdate",
+      "patientRijksregister": "National Number",
+      "doctorName": "Doctor Name",
+      "doctorRiziv": "RIZIV Number",
+      "doctorSpecialty": "Speciality",
+      "attestDate": "Certificate Date",
+      "periodStart": "Period Start Date",
+      "periodEnd": "Period End Date",
+      "daysAbsent": "Days Absent",
+      "diagnosis": "Diagnosis",
+      "fileSize": "File Size",
+      "fraudCaseId": "Fraud Case ID",
+      "errors": "Errors"
+    }
+  },
+  "language": {
+    "select": "Taal / Langue / Language",
+    "nl": "Nederlands",
+    "fr": "Français",
+    "en": "English"
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "app": {
+    "title": "Validation du Certificat d'Absence",
+    "subtitle": "Portail en Ligne"
+  },
+  "welcome": {
+    "title": "Bienvenue !",
+    "description": "Téléchargez votre certificat d'absence pour le faire traiter et valider automatiquement par notre IA. Le système vérifie la validité de votre certificat et fournit un retour immédiat."
+  },
+  "upload": {
+    "label": "Sélectionnez votre certificat d'absence",
+    "button": "Choisir un fichier",
+    "selected": "Fichier sélectionné : {filename}",
+    "submitButton": "Télécharger et Valider",
+    "processing": "Traitement en cours...",
+    "error": "Veuillez d'abord sélectionner un fichier"
+  },
+  "steps": {
+    "uploading": "Téléchargement",
+    "analyzing": "Analyse",
+    "verification": "Vérification",
+    "fraudCheck": "Contrôle fraude",
+    "result": "Résultat"
+  },
+  "processStatus": {
+    "title": "STATUT DU PROCESSUS",
+    "showDetails": "Afficher les détails du processus",
+    "hideDetails": "Masquer les détails du processus",
+    "fileSelected": "📄 Fichier sélectionné : {filename} ({size} KB)",
+    "uploading": "📤 Document en cours de téléchargement vers le serveur...",
+    "analyzingStart": "🤖 Démarrage de l'analyse IA via Azure Content Understanding...",
+    "analyzingComplete": "✅ Analyse IA terminée - données extraites",
+    "validatingDoctor": "🔍 Validation du médecin dans la base de données INAMI...",
+    "validationComplete": "✅ Vérification de la base de données terminée",
+    "fraudCheck": "⚠️ Vérification des indicateurs de fraude...",
+    "allChecksComplete": "✅ Tous les contrôles effectués",
+    "documentValid": "✅ Document valide - aucun problème détecté",
+    "documentInvalid": "❌ Le document contient des erreurs ou est invalide",
+    "error": "❌ Erreur : {message}"
+  },
+  "results": {
+    "validTitle": "Résultat de la Validation",
+    "invalidTitle": "Résultat de la Validation",
+    "errorTitle": "Erreur :",
+    "rejectionReason": "Raison du rejet",
+    "validationErrors": "Erreurs de validation",
+    "warnings": "Avertissements",
+    "generalInfo": "Dossier créé",
+    "caseInfo": "Dossier créé",
+    "summary": "Résumé",
+    "patientInfo": "Informations sur le Patient",
+    "doctorInfo": "Informations sur le Médecin",
+    "attestInfo": "Détails du Certificat",
+    "fields": {
+      "caseId": "ID du Dossier",
+      "filename": "Nom du Fichier",
+      "processedOn": "Traité le",
+      "status": "Statut",
+      "name": "Nom",
+      "nationalNumber": "Numéro de Registre National",
+      "birthdate": "Date de Naissance",
+      "address": "Adresse",
+      "postalCode": "Code Postal et Commune",
+      "phone": "Téléphone",
+      "rizivNumber": "Numéro INAMI",
+      "signature": "Signature",
+      "from": "De",
+      "to": "À",
+      "leaveHome": "Peut quitter le domicile",
+      "notAvailable": "Non disponible",
+      "yes": "Oui",
+      "no": "Non",
+      "approved": "Approuvé",
+      "rejected": "Rejeté",
+      "patientName": "Nom du Patient",
+      "patientBirthdate": "Date de Naissance",
+      "patientRijksregister": "Numéro de Registre National",
+      "doctorName": "Nom du Médecin",
+      "doctorRiziv": "Numéro INAMI",
+      "doctorSpecialty": "Spécialité",
+      "attestDate": "Date du Certificat",
+      "periodStart": "Date de Début de la Période",
+      "periodEnd": "Date de Fin de la Période",
+      "daysAbsent": "Jours d'Absence",
+      "diagnosis": "Diagnostic",
+      "fileSize": "Taille du Fichier",
+      "fraudCaseId": "ID du Dossier de Fraude",
+      "errors": "Erreurs"
+    }
+  },
+  "language": {
+    "select": "Taal / Langue / Language",
+    "nl": "Nederlands",
+    "fr": "Français",
+    "en": "English"
+  }
+}

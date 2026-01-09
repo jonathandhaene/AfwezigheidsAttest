@@ -8,13 +8,16 @@ import os
 import pyodbc
 import uuid
 from datetime import datetime
-from credentials_service import get_sql_token_struct
+from services.credentials_service import get_sql_token_struct
+from decorators.service_errors import handle_service_errors
 
 
+@handle_service_errors("SQL Database")
 def validate_doctor_in_database(doctor_info: dict) -> dict:
     """
     Validate doctor information against Azure SQL Database to detect fraud
     Uses Entra ID (Azure AD) authentication for secure access
+    Raises ServiceCallError on timeout or connection issues
     
     Searches database using extracted Content Understanding fields:
     - Primary: RIZIV number (exact match)
@@ -160,9 +163,11 @@ def validate_doctor_in_database(doctor_info: dict) -> dict:
     return validation_result
 
 
+@handle_service_errors("SQL Database")
 def create_fraud_case(extracted_data: dict, fraud_reason: str, doctor_validation: dict) -> dict:
     """
     Create a fraud case in the database when document is invalid or doctor not found
+    Raises ServiceCallError on timeout or connection issues
     
     Returns:
         dict with case_id and success status

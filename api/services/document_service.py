@@ -8,16 +8,18 @@ import os
 from datetime import datetime, date
 from dateutil import parser
 from content_understanding_client import ContentUnderstandingClient
-from database_service import validate_doctor_in_database, create_fraud_case
-from credentials_service import get_credential
+from services.credentials_service import get_credential
+from decorators.service_errors import handle_service_errors
 
 # Cache the client at module level to reuse across requests
 _cached_client = None
 
 
+@handle_service_errors("Azure Content Understanding")
 def analyze_document_with_content_understanding(file_content: bytes, file_name: str) -> dict:
     """
     Analyze document using Azure Content Understanding
+    Raises ServiceCallError on timeout or connection issues
     """
     global _cached_credential, _cached_client
     
@@ -56,19 +58,19 @@ def analyze_document_with_content_understanding(file_content: bytes, file_name: 
         
         logging.info("Document analysis completed")
         
-        # Extract information from the result
-        extracted_data = extract_document_info(result)
-        
-        # Validate the document
-        return validate_attestation(extracted_data, file_name)
-        
-    except Exception as e:
-        logging.error(f"Error analyzing document: {str(e)}")
         return {
-            "valid": False,
-            "message": f"Fout bij het analyseren van het document: {str(e)}",
-            "details": {}
+            "success": True,
+            "result": result
         }
+    
+    # Let configuration errors fall through (not service errors)
+    except ValueError as e:
+        logging.error(f"Configuration error: {str(e)}")
+        return {
+            "success": False,
+            "message": f"Configuratiefout: {str(e)}"
+        }
+    # All other exceptions (timeouts, connection errors, etc.) are handled by the decorator
 
 
 def extract_document_info(result: dict) -> dict:
@@ -172,13 +174,13 @@ def extract_document_info(result: dict) -> dict:
     return extracted_data
 
 
-def validate_attestation(extracted_data: dict, file_name: str) -> dict:
+def validate_attestation_rules(extracted_data: dict) -> list:
     """
-    Validate the attestation based on extracted structured data
+    Validate business rules (dates, signature) without external dependencies
+    Returns list of validation error messages
     """
     today = date.today()
     validation_errors = []
-    validation_warnings = []
     
     # Check incapacity start date
     if extracted_data.get("incapacity_start_date"):
@@ -195,10 +197,8 @@ def validate_attestation(extracted_data: dict, file_name: str) -> dict:
     if extracted_data.get("incapacity_end_date"):
         try:
             end_date = parser.parse(extracted_data["incapacity_end_date"]).date()
-            if end_date > today:
-                validation_warnings.append(
-                    f"Onmogelijheid einddatum ligt in de toekomst: {end_date.strftime('%d-%m-%Y')} (dit kan geldig zijn)"
-                )
+            # Future end dates are allowed (warnings only, not errors)
+            # Removed validation_warnings as this function only returns errors
         except (ValueError, TypeError, parser.ParserError) as e:
             logging.warning(f"Could not parse incapacity end date: {e}")
     
@@ -217,126 +217,4 @@ def validate_attestation(extracted_data: dict, file_name: str) -> dict:
     if not extracted_data["has_signature"]:
         validation_errors.append("Er ontbreekt een handtekening van de arts op het document")
     
-    # Validate doctor information in database
-    doctor_validation = validate_doctor_in_database(extracted_data.get("doctor_info", {}))
-    
-    # If fraud detected, create fraud case and reject
-    if doctor_validation["fraud_detected"]:
-        fraud_reason = "Arts niet gevonden in geregistreerde artsen database"
-        fraud_case = create_fraud_case(extracted_data, fraud_reason, doctor_validation)
-        
-        details = {
-            "Bestandsnaam": file_name,
-            "Verwerkt op": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
-            "Status": "Afgekeurd",
-            "Patiënt": extracted_data.get("patient_name", "Onbekend"),
-            "Rijksregisternummer": extracted_data.get("patient_national_number", ""),
-            "Geboortedatum": extracted_data.get("patient_birth_date", ""),
-            "Adres patiënt": extracted_data.get("patient_address", ""),
-            "Postcode en gemeente patiënt": extracted_data.get("patient_postal_code_city", ""),
-            "Arts": extracted_data["doctor_info"].get("name", "Onbekend"),
-            "RIZIV Nummer": extracted_data["doctor_info"].get("riziv", "Niet gevonden"),
-            "Adres arts": extracted_data["doctor_info"].get("address", ""),
-            "Postcode en gemeente arts": extracted_data["doctor_info"].get("postal_code_city", ""),
-            "Telefoonnummer arts": extracted_data["doctor_info"].get("phone", ""),
-            "Reden": fraud_reason
-        }
-        
-        # Add fraud case ID if created successfully
-        if fraud_case["success"]:
-            details["Zaak ID"] = fraud_case["case_id"]
-            logging.info(f"Fraud case created: {fraud_case['case_id']}")
-        
-        return {
-            "valid": False,
-            "message": "Het document is afgekeurd. De arts kon niet worden geverifieerd in onze database van geregistreerde artsen.",
-            "details": details
-        }
-    
-    # Add validation message if doctor was found
-    if doctor_validation["message"] and doctor_validation["doctor_found"]:
-        validation_warnings.append(doctor_validation["message"])
-    
-    # Determine if valid
-    is_valid = len(validation_errors) == 0
-    
-    # Build result
-    if is_valid:
-        details = {
-            "Bestandsnaam": file_name,
-            "Verwerkt op": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
-            "Status": "Goedgekeurd",
-            "Patiënt": extracted_data.get("patient_name", "Onbekend"),
-            "Rijksregisternummer": extracted_data.get("patient_national_number", ""),
-            "Geboortedatum": extracted_data.get("patient_birth_date", ""),
-            "Adres patiënt": extracted_data.get("patient_address", ""),
-            "Postcode en gemeente patiënt": extracted_data.get("patient_postal_code_city", ""),
-            "Arts": extracted_data["doctor_info"].get("name", "Onbekend"),
-            "RIZIV Nummer": extracted_data["doctor_info"].get("riziv", "Niet gevonden"),
-            "Adres arts": extracted_data["doctor_info"].get("address", ""),
-            "Postcode en gemeente arts": extracted_data["doctor_info"].get("postal_code_city", ""),
-            "Telefoonnummer arts": extracted_data["doctor_info"].get("phone", "")
-        }
-        
-        if extracted_data.get("incapacity_start_date"):
-            details["Onmogelijkheid vanaf"] = extracted_data["incapacity_start_date"]
-        
-        if extracted_data.get("incapacity_end_date"):
-            details["Onmogelijkheid tot"] = extracted_data["incapacity_end_date"]
-        
-        if extracted_data.get("summary"):
-            details["Samenvatting"] = extracted_data["summary"]
-        
-        if extracted_data.get("allowed_to_leave_house") is not None:
-            details["Mag huis verlaten"] = "Ja" if extracted_data["allowed_to_leave_house"] else "Nee"
-        
-        if validation_warnings:
-            details["Waarschuwingen"] = validation_warnings
-        
-        return {
-            "valid": True,
-            "message": "Uw afwezigheidsattest is geldig en goedgekeurd.",
-            "details": details
-        }
-    else:
-        # Document has validation errors - create fraud case
-        fraud_reason = "; ".join(validation_errors)
-        fraud_case = create_fraud_case(extracted_data, fraud_reason, doctor_validation)
-        
-        details = {
-            "Bestandsnaam": file_name,
-            "Verwerkt op": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
-            "Status": "Afgekeurd",
-            "Patiënt": extracted_data.get("patient_name", "Onbekend"),
-            "Rijksregisternummer": extracted_data.get("patient_national_number", ""),
-            "Geboortedatum": extracted_data.get("patient_birth_date", ""),
-            "Adres patiënt": extracted_data.get("patient_address", ""),
-            "Postcode en gemeente patiënt": extracted_data.get("patient_postal_code_city", ""),
-            "Arts": extracted_data["doctor_info"].get("name", "Onbekend"),
-            "RIZIV Nummer": extracted_data["doctor_info"].get("riziv", "Niet gevonden"),
-            "Adres arts": extracted_data["doctor_info"].get("address", ""),
-            "Postcode en gemeente arts": extracted_data["doctor_info"].get("postal_code_city", ""),
-            "Telefoonnummer arts": extracted_data["doctor_info"].get("phone", ""),
-            "Handtekening": "Ja" if extracted_data["has_signature"] else "Nee",
-            "Fouten": validation_errors
-        }
-        
-        # Add fraud case ID if created successfully
-        if fraud_case["success"]:
-            details["Zaak ID"] = fraud_case["case_id"]
-            logging.info(f"Fraud case created: {fraud_case['case_id']}")
-        
-        if extracted_data.get("incapacity_start_date"):
-            details["Onmogelijkheid vanaf"] = extracted_data["incapacity_start_date"]
-        
-        if extracted_data.get("incapacity_end_date"):
-            details["Onmogelijkheid tot"] = extracted_data["incapacity_end_date"]
-        
-        if extracted_data.get("allowed_to_leave_house") is not None:
-            details["Mag huis verlaten"] = "Ja" if extracted_data["allowed_to_leave_house"] else "Nee"
-        
-        return {
-            "valid": False,
-            "message": "Uw afwezigheidsattest kon niet worden goedgekeurd.",
-            "details": details
-        }
+    return validation_errors

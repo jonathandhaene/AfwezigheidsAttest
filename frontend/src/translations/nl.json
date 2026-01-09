@@ -1,0 +1,97 @@
+{
+  "app": {
+    "title": "Afwezigheidsattest Validatie",
+    "subtitle": "Online Portaal"
+  },
+  "welcome": {
+    "title": "Welkom!",
+    "description": "Upload uw afwezigheidsattest om het automatisch te laten verwerken en valideren door onze AI. Het systeem controleert de geldigheid van uw attest en geeft direct feedback."
+  },
+  "upload": {
+    "label": "Selecteer uw afwezigheidsattest",
+    "button": "Choose File",
+    "selected": "Geselecteerd bestand: {filename}",
+    "submitButton": "Upload en Valideer",
+    "processing": "Verwerken...",
+    "error": "Selecteer eerst een bestand"
+  },
+  "steps": {
+    "uploading": "Uploaden",
+    "analyzing": "Analyseren",
+    "verification": "Verificatie",
+    "fraudCheck": "Fraudecheck",
+    "result": "Resultaat"
+  },
+  "processStatus": {
+    "title": "PROCESSTATUS",
+    "showDetails": "Toon procesdetails",
+    "hideDetails": "Verberg procesdetails",
+    "fileSelected": "📄 Bestand geselecteerd: {filename} ({size} KB)",
+    "uploading": "📤 Document wordt geüpload naar server...",
+    "analyzingStart": "🤖 Starten van AI analyse via Azure Content Understanding...",
+    "analyzingComplete": "✅ AI analyse voltooid - gegevens geëxtraheerd",
+    "validatingDoctor": "🔍 Valideren van arts in RIZIV database...",
+    "validationComplete": "✅ Database verificatie voltooid",
+    "fraudCheck": "⚠️ Controleren op fraude-indicatoren...",
+    "allChecksComplete": "✅ Alle controles uitgevoerd",
+    "documentValid": "✅ Document is geldig - geen problemen gevonden",
+    "documentInvalid": "❌ Document bevat fouten of is ongeldig",
+    "error": "❌ Fout: {message}"
+  },
+  "results": {
+    "validTitle": "Validatie Resultaat",
+    "invalidTitle": "Validatie Resultaat",
+    "errorTitle": "Fout:",
+    "rejectionReason": "Reden van afkeuring",
+    "validationErrors": "Validatiefouten",
+    "warnings": "Waarschuwingen",
+    "generalInfo": "Zaak Aangemaakt",
+    "caseInfo": "Zaak Aangemaakt",
+    "summary": "Samenvatting",
+    "patientInfo": "Patiënt Informatie",
+    "doctorInfo": "Arts Informatie",
+    "attestInfo": "Attest Details",
+    "fields": {
+      "caseId": "Zaak ID",
+      "filename": "Bestandsnaam",
+      "processedOn": "Verwerkt op",
+      "status": "Status",
+      "name": "Naam",
+      "nationalNumber": "Rijksregisternummer",
+      "birthdate": "Geboortedatum",
+      "address": "Adres",
+      "postalCode": "Postcode en gemeente",
+      "phone": "Telefoonnummer",
+      "rizivNumber": "RIZIV Nummer",
+      "signature": "Handtekening",
+      "from": "Van",
+      "to": "Tot",
+      "leaveHome": "Mag huis verlaten",
+      "notAvailable": "Niet beschikbaar",
+      "yes": "Ja",
+      "no": "Nee",
+      "approved": "Goedgekeurd",
+      "rejected": "Afgekeurd",
+      "patientName": "Naam Patiënt",
+      "patientBirthdate": "Geboortedatum",
+      "patientRijksregister": "Rijksregisternummer",
+      "doctorName": "Naam Arts",
+      "doctorRiziv": "RIZIV Nummer",
+      "doctorSpecialty": "Specialiteit",
+      "attestDate": "Datum Attest",
+      "periodStart": "Begindatum Periode",
+      "periodEnd": "Einddatum Periode",
+      "daysAbsent": "Dagen Afwezig",
+      "diagnosis": "Diagnose",
+      "fileSize": "Bestandsgrootte",
+      "fraudCaseId": "Fraudedossier ID",
+      "errors": "Fouten"
+    }
+  },
+  "language": {
+    "select": "Taal / Langue / Language",
+    "nl": "Nederlands",
+    "fr": "Français",
+    "en": "English"
+  }
+}

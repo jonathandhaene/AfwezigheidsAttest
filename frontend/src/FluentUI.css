@@ -1,0 +1,695 @@
+/* Microsoft Fluent UI Design System Styles */
+/* Based on https://developer.microsoft.com/en-us/fluentui */
+
+:root {
+  /* Fluent UI Color Palette */
+  --fluent-primary: #0078d4;
+  --fluent-primary-hover: #106ebe;
+  --fluent-primary-active: #005a9e;
+  --fluent-primary-light: #deecf9;
+  --fluent-neutral-light: #faf9f8;
+  --fluent-neutral-lighter: #f3f2f1;
+  --fluent-neutral-lightest: #ffffff;
+  --fluent-neutral-quaternary: #d2d0ce;
+  --fluent-neutral-quaternary-alt: #e1dfdd;
+  --fluent-neutral-tertiary: #a19f9d;
+  --fluent-neutral-secondary: #605e5c;
+  --fluent-neutral-primary: #323130;
+  --fluent-neutral-dark: #201f1e;
+  
+  /* Fluent UI Semantic Colors */
+  --fluent-success: #107c10;
+  --fluent-success-background: #dff6dd;
+  --fluent-warning: #f7630c;
+  --fluent-warning-background: #fff4ce;
+  --fluent-error: #d13438;
+  --fluent-error-background: #fde7e9;
+  --fluent-info: #0078d4;
+  --fluent-info-background: #f3f9fd;
+  
+  /* Fluent UI Typography */
+  --fluent-font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
+  --fluent-font-size-10: 10px;
+  --fluent-font-size-12: 12px;
+  --fluent-font-size-14: 14px;
+  --fluent-font-size-16: 16px;
+  --fluent-font-size-18: 18px;
+  --fluent-font-size-20: 20px;
+  --fluent-font-size-24: 24px;
+  --fluent-font-size-28: 28px;
+  --fluent-font-size-32: 32px;
+  --fluent-font-weight-regular: 400;
+  --fluent-font-weight-semibold: 600;
+  --fluent-font-weight-bold: 700;
+  
+  /* Fluent UI Spacing */
+  --fluent-spacing-xs: 4px;
+  --fluent-spacing-s: 8px;
+  --fluent-spacing-m: 12px;
+  --fluent-spacing-l: 16px;
+  --fluent-spacing-xl: 20px;
+  --fluent-spacing-xxl: 24px;
+  --fluent-spacing-xxxl: 32px;
+  
+  /* Fluent UI Effects (Depth/Elevation) */
+  --fluent-elevation-4: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.132), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.108);
+  --fluent-elevation-8: 0 3.2px 7.2px 0 rgba(0, 0, 0, 0.132), 0 0.6px 1.8px 0 rgba(0, 0, 0, 0.108);
+  --fluent-elevation-16: 0 6.4px 14.4px 0 rgba(0, 0, 0, 0.132), 0 1.2px 3.6px 0 rgba(0, 0, 0, 0.108);
+  --fluent-elevation-64: 0 25.6px 57.6px 0 rgba(0, 0, 0, 0.22), 0 4.8px 14.4px 0 rgba(0, 0, 0, 0.18);
+  --fluent-border-radius: 2px;
+  --fluent-border-radius-medium: 4px;
+  --fluent-border-radius-large: 6px;
+}
+
+/* Fluent UI Base Styles */
+body {
+  font-family: var(--fluent-font-family) !important;
+  font-size: var(--fluent-font-size-14) !important;
+  color: var(--fluent-neutral-primary) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--fluent-neutral-lighter) !important;
+}
+
+/* Override App background with Fluent UI style */
+.App {
+  background: var(--fluent-neutral-lighter) !important;
+  background-attachment: unset !important;
+}
+
+/* Remove decorative overlays */
+.App::before,
+.App::after,
+.container::before {
+  display: none !important;
+}
+
+/* Fluent UI Container */
+.container {
+  background-color: transparent !important;
+  padding: var(--fluent-spacing-xxxl) var(--fluent-spacing-xl);
+  max-width: 1200px;
+}
+
+/* Fluent UI Navbar */
+.navbar {
+  background: var(--fluent-neutral-lightest) !important;
+  box-shadow: var(--fluent-elevation-4) !important;
+  padding: var(--fluent-spacing-l) var(--fluent-spacing-xxl) !important;
+  border-bottom: 1px solid var(--fluent-neutral-quaternary-alt);
+}
+
+.navbar-brand {
+  font-weight: var(--fluent-font-weight-semibold) !important;
+  font-size: var(--fluent-font-size-20) !important;
+  color: var(--fluent-neutral-primary) !important;
+}
+
+/* Fluent UI Button Styles */
+.btn,
+button.btn {
+  font-family: var(--fluent-font-family) !important;
+  font-size: var(--fluent-font-size-14) !important;
+  font-weight: var(--fluent-font-weight-semibold) !important;
+  border-radius: var(--fluent-border-radius) !important;
+  border: 1px solid transparent !important;
+  transition: all 0.1s cubic-bezier(0.1, 0.9, 0.2, 1) !important;
+  outline: none !important;
+  min-height: 32px !important;
+  padding: 5px 20px !important;
+}
+
+.btn-primary,
+button.btn-primary,
+.btn.btn-primary {
+  background-color: var(--fluent-primary) !important;
+  border-color: var(--fluent-primary) !important;
+  color: var(--fluent-neutral-lightest) !important;
+}
+
+.btn-primary:hover,
+button.btn-primary:hover,
+.btn.btn-primary:hover,
+.btn-primary:not(:disabled):hover {
+  background-color: var(--fluent-primary-hover) !important;
+  border-color: var(--fluent-primary-hover) !important;
+  color: var(--fluent-neutral-lightest) !important;
+}
+
+.btn-primary:active,
+.btn-primary:focus,
+button.btn-primary:active,
+button.btn-primary:focus,
+.btn.btn-primary:active,
+.btn.btn-primary:focus {
+  background-color: var(--fluent-primary-active) !important;
+  border-color: var(--fluent-primary-active) !important;
+  box-shadow: none !important;
+  color: var(--fluent-neutral-lightest) !important;
+}
+
+.btn-primary:disabled,
+.btn-primary.disabled,
+button.btn-primary:disabled,
+button.btn-primary.disabled {
+  background-color: var(--fluent-neutral-lighter) !important;
+  border-color: var(--fluent-neutral-quaternary) !important;
+  color: var(--fluent-neutral-secondary) !important;
+  opacity: 1 !important;
+}
+
+.btn-lg,
+button.btn-lg {
+  padding: 8px 24px !important;
+  font-size: var(--fluent-font-size-16) !important;
+  min-height: 40px !important;
+}
+
+.btn-link {
+  color: var(--fluent-primary) !important;
+  font-weight: var(--fluent-font-weight-regular) !important;
+  text-decoration: none !important;
+}
+
+.btn-link:hover {
+  color: var(--fluent-primary-hover) !important;
+  text-decoration: underline !important;
+}
+
+/* Fluent UI Card Styles */
+.card {
+  border: 1px solid var(--fluent-neutral-quaternary-alt) !important;
+  border-radius: 0 !important;
+  box-shadow: var(--fluent-elevation-4) !important;
+  background-color: var(--fluent-neutral-lightest) !important;
+  transition: box-shadow 0.2s cubic-bezier(0.1, 0.9, 0.2, 1) !important;
+  margin-bottom: var(--fluent-spacing-l);
+}
+
+.card:hover {
+  box-shadow: var(--fluent-elevation-8) !important;
+}
+
+.card-header,
+.card-header.border-bottom {
+  border-bottom: 1px solid var(--fluent-neutral-quaternary-alt) !important;
+  padding: var(--fluent-spacing-l) var(--fluent-spacing-xl) !important;
+  font-weight: var(--fluent-font-weight-semibold) !important;
+  font-size: var(--fluent-font-size-16) !important;
+  border-radius: 0 !important;
+}
+
+.card-header.bg-danger,
+.card-header.bg-success,
+.card-header.bg-warning,
+.card-header.bg-info,
+.card-header.bg-primary {
+  border-radius: 0 !important;
+}
+
+.card-body {
+  padding: var(--fluent-spacing-xl) !important;
+}
+
+.bg-light {
+  background-color: var(--fluent-neutral-light) !important;
+}
+
+/* Fluent UI Alert Styles */
+.alert {
+  border-radius: 0 !important;
+  border: 1px solid !important;
+  padding: var(--fluent-spacing-l) !important;
+  font-size: var(--fluent-font-size-14) !important;
+}
+
+.alert-danger {
+  background-color: #fef0f1 !important;
+  border-color: #d13438 !important;
+  color: #a4262c !important;
+}
+
+.alert-warning {
+  background-color: var(--fluent-warning-background) !important;
+  border-color: var(--fluent-warning) !important;
+  color: #8a5707 !important;
+}
+
+.alert-success {
+  background-color: var(--fluent-success-background) !important;
+  border-color: var(--fluent-success) !important;
+  color: #0b6a0b !important;
+}
+
+.alert-info {
+  background-color: var(--fluent-info-background) !important;
+  border-color: var(--fluent-info) !important;
+  color: #004578 !important;
+}
+
+.alert-heading {
+  font-weight: var(--fluent-font-weight-semibold) !important;
+  font-size: var(--fluent-font-size-14) !important;
+}
+
+/* Fluent UI Form Controls */
+.form-control,
+.form-select {
+  border: 1px solid var(--fluent-neutral-tertiary) !important;
+  border-radius: var(--fluent-border-radius) !important;
+  font-family: var(--fluent-font-family) !important;
+  font-size: var(--fluent-font-size-14) !important;
+  padding: var(--fluent-spacing-s) var(--fluent-spacing-m) !important;
+  transition: border-color 0.1s cubic-bezier(0.1, 0.9, 0.2, 1) !important;
+  min-height: 32px !important;
+  background-color: var(--fluent-neutral-lightest) !important;
+}
+
+.form-control:hover,
+.form-select:hover {
+  border-color: var(--fluent-neutral-secondary) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--fluent-primary) !important;
+  box-shadow: 0 0 0 1px var(--fluent-primary) !important;
+  outline: none !important;
+}
+
+.form-label {
+  font-weight: var(--fluent-font-weight-semibold) !important;
+  color: var(--fluent-neutral-primary) !important;
+  margin-bottom: var(--fluent-spacing-xs) !important;
+  font-size: var(--fluent-font-size-14) !important;
+}
+
+/* Fluent UI Table Styles */
+.table {
+  font-size: var(--fluent-font-size-14) !important;
+  color: var(--fluent-neutral-primary) !important;
+}
+
+.table th {
+  font-weight: var(--fluent-font-weight-semibold) !important;
+  color: var(--fluent-neutral-primary) !important;
+  border-bottom: 2px solid var(--fluent-neutral-quaternary) !important;
+  font-size: var(--fluent-font-size-12) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table td {
+  border-bottom: 1px solid var(--fluent-neutral-lighter) !important;
+  padding: var(--fluent-spacing-m) var(--fluent-spacing-s) !important;
+}
+
+.table-borderless td,
+.table-borderless th {
+  border: none !important;
+}
+
+/* Fluent UI Badge Styles */
+.badge {
+  font-family: var(--fluent-font-family) !important;
+  font-size: var(--fluent-font-size-12) !important;
+  font-weight: var(--fluent-font-weight-semibold) !important;
+  padding: 2px var(--fluent-spacing-s) !important;
+  border-radius: var(--fluent-border-radius) !important;
+  line-height: 1.5 !important;
+}
+
+.badge.bg-success {
+  background-color: var(--fluent-success) !important;
+  color: white !important;
+}
+
+.badge.bg-warning {
+  background-color: var(--fluent-warning) !important;
+  color: var(--fluent-neutral-dark) !important;
+}
+
+.badge.bg-danger {
+  background-color: #c50f1f !important;
+  color: white !important;
+}
+
+.badge.bg-primary {
+  background-color: var(--fluent-primary) !important;
+  color: white !important;
+}
+
+.badge.bg-secondary {
+  background-color: var(--fluent-neutral-tertiary) !important;
+  color: white !important;
+}
+
+/* Fluent UI Progress Bar */
+.progress {
+  height: 4px !important;
+  border-radius: var(--fluent-border-radius) !important;
+  background-color: var(--fluent-neutral-lighter) !important;
+  overflow: hidden !important;
+}
+
+.progress-bar {
+  background-color: var(--fluent-primary) !important;
+  transition: width 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) !important;
+}
+
+/* Fluent UI Spinner */
+.spinner-border {
+  border-color: var(--fluent-primary) !important;
+  border-right-color: transparent !important;
+  width: 1rem !important;
+  height: 1rem !important;
+  border-width: 2px !important;
+}
+
+/* Fluent UI Text Utilities */
+.text-primary {
+  color: var(--fluent-primary) !important;
+}
+
+.text-muted {
+  color: var(--fluent-neutral-tertiary) !important;
+}
+
+.text-dark {
+  color: var(--fluent-neutral-primary) !important;
+}
+
+.text-white {
+  color: var(--fluent-neutral-lightest) !important;
+}
+
+.fw-bold {
+  font-weight: var(--fluent-font-weight-bold) !important;
+}
+
+.fw-semibold {
+  font-weight: var(--fluent-font-weight-semibold) !important;
+}
+
+/* Fluent UI Shadows */
+.shadow-sm {
+  box-shadow: var(--fluent-elevation-4) !important;
+}
+
+.shadow {
+  box-shadow: var(--fluent-elevation-8) !important;
+}
+
+.shadow-lg {
+  box-shadow: var(--fluent-elevation-16) !important;
+}
+
+.bg-light {
+  background-color: var(--fluent-neutral-light) !important;
+}
+
+.bg-white {
+  background-color: var(--fluent-neutral-lightest) !important;
+}
+
+.bg-success {
+  background-color: var(--fluent-success) !important;
+  color: white !important;
+}
+
+.bg-danger {
+  background-color: #c50f1f !important;
+  color: white !important;
+}
+
+.bg-warning {
+  background-color: var(--fluent-warning) !important;
+  color: var(--fluent-neutral-dark) !important;
+}
+
+.bg-primary {
+  background-color: var(--fluent-primary) !important;
+  color: white !important;
+}
+
+.bg-info {
+  background-color: var(--fluent-info) !important;
+  color: white !important;
+}
+
+.bg-secondary {
+  background-color: var(--fluent-neutral-tertiary) !important;
+  color: white !important;
+}
+
+/* Ensure text-white works properly */
+.text-white,
+.text-white * {
+  color: var(--fluent-neutral-lightest) !important;
+}
+
+/* Fluent UI Border Utilities */
+.border {
+  border: 1px solid var(--fluent-neutral-quaternary-alt) !important;
+}
+
+.border-bottom {
+  border-bottom: 1px solid var(--fluent-neutral-quaternary-alt) !important;
+}
+
+.border-success {
+  border-color: var(--fluent-success) !important;
+}
+
+.border-danger {
+  border-color: var(--fluent-error) !important;
+}
+
+/* Fluent UI Rounded Corners */
+.rounded {
+  border-radius: var(--fluent-border-radius) !important;
+}
+
+.rounded-lg {
+  border-radius: var(--fluent-border-radius-large) !important;
+}
+
+/* Fluent UI Link Styles */
+a {
+  color: var(--fluent-primary) !important;
+  text-decoration: none !important;
+  transition: color 0.1s cubic-bezier(0.1, 0.9, 0.2, 1) !important;
+}
+
+a:hover {
+  color: var(--fluent-primary-hover) !important;
+  text-decoration: underline !important;
+}
+
+a:active {
+  color: var(--fluent-primary-active) !important;
+}
+
+/* Fluent UI Code Blocks */
+code {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+  background-color: var(--fluent-neutral-lighter) !important;
+  color: var(--fluent-primary) !important;
+  padding: 2px 6px !important;
+  border-radius: var(--fluent-border-radius) !important;
+  font-size: 0.9em !important;
+  border: 1px solid var(--fluent-neutral-quaternary-alt);
+}
+
+/* Fluent UI List Styles */
+.alert ul {
+  list-style-type: none !important;
+  padding-left: var(--fluent-spacing-l) !important;
+  margin-bottom: 0 !important;
+}
+
+.alert ul li {
+  padding: var(--fluent-spacing-xs) 0 !important;
+  position: relative !important;
+}
+
+.alert ul li::before {
+  content: "•" !important;
+  font-weight: bold !important;
+  display: inline-block !important;
+  width: 1em !important;
+  margin-left: -1em !important;
+  margin-right: var(--fluent-spacing-xs) !important;
+}
+
+.alert-danger ul li::before {
+  color: var(--fluent-error) !important;
+}
+
+.alert-warning ul li::before {
+  color: var(--fluent-warning) !important;
+}
+
+.alert-success ul li::before {
+  color: var(--fluent-success) !important;
+}
+
+/* Fluent UI Heading Styles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--fluent-font-family) !important;
+  font-weight: var(--fluent-font-weight-semibold) !important;
+  color: var(--fluent-neutral-primary) !important;
+  margin-bottom: var(--fluent-spacing-m) !important;
+}
+
+h1 { font-size: var(--fluent-font-size-32) !important; }
+h2 { font-size: var(--fluent-font-size-28) !important; }
+h3 { font-size: var(--fluent-font-size-24) !important; }
+h4 { font-size: var(--fluent-font-size-20) !important; }
+h5 { font-size: var(--fluent-font-size-16) !important; }
+h6 { font-size: var(--fluent-font-size-14) !important; }
+
+/* Fluent UI Select Dropdown */
+select.form-select {
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 4L6 8L10 4' stroke='%23605e5c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right var(--fluent-spacing-m) center !important;
+  background-size: 12px !important;
+  padding-right: var(--fluent-spacing-xxxl) !important;
+}
+
+/* Fluent UI Welcome Section */
+.welcome-section {
+  background-color: var(--fluent-neutral-lightest) !important;
+  border: 1px solid var(--fluent-neutral-quaternary-alt) !important;
+  border-radius: var(--fluent-border-radius-medium) !important;
+  padding: var(--fluent-spacing-xxl) !important;
+  margin-bottom: var(--fluent-spacing-xxl) !important;
+  box-shadow: var(--fluent-elevation-4) !important;
+}
+
+/* Fluent UI File Input */
+input[type="file"] {
+  font-family: var(--fluent-font-family) !important;
+  font-size: var(--fluent-font-size-14) !important;
+}
+
+input[type="file"]::file-selector-button {
+  background-color: var(--fluent-neutral-lightest) !important;
+  border: 1px solid var(--fluent-neutral-tertiary) !important;
+  border-radius: var(--fluent-border-radius) !important;
+  padding: var(--fluent-spacing-s) var(--fluent-spacing-l) !important;
+  font-family: var(--fluent-font-family) !important;
+  font-size: var(--fluent-font-size-14) !important;
+  font-weight: var(--fluent-font-weight-semibold) !important;
+  color: var(--fluent-neutral-primary) !important;
+  cursor: pointer !important;
+  transition: all 0.1s cubic-bezier(0.1, 0.9, 0.2, 1) !important;
+}
+
+input[type="file"]::file-selector-button:hover {
+  background-color: var(--fluent-neutral-lighter) !important;
+  border-color: var(--fluent-neutral-secondary) !important;
+}
+
+/* Fluent UI Process Log */
+.process-log {
+  background-color: var(--fluent-neutral-light) !important;
+  border: 1px solid var(--fluent-neutral-quaternary-alt) !important;
+  border-radius: var(--fluent-border-radius-medium) !important;
+  padding: var(--fluent-spacing-l) !important;
+}
+
+.process-log-header {
+  font-weight: var(--fluent-font-weight-semibold) !important;
+  margin-bottom: var(--fluent-spacing-s) !important;
+  color: var(--fluent-neutral-secondary) !important;
+}
+
+.process-log-message {
+  padding: var(--fluent-spacing-xs) 0 !important;
+  font-size: var(--fluent-font-size-12) !important;
+}
+
+.process-log-time {
+  color: var(--fluent-neutral-tertiary) !important;
+  margin-right: var(--fluent-spacing-s) !important;
+}
+
+/* Fluent UI Progress Steps */
+.progress-steps {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: var(--fluent-spacing-l) !important;
+}
+
+.progress-step {
+  flex: 1 !important;
+  text-align: center !important;
+  position: relative !important;
+}
+
+.step-circle {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background-color: var(--fluent-neutral-lighter) !important;
+  border: 2px solid var(--fluent-neutral-quaternary) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: var(--fluent-font-weight-semibold) !important;
+  font-size: var(--fluent-font-size-14) !important;
+  color: var(--fluent-neutral-tertiary) !important;
+  transition: all 0.2s cubic-bezier(0.1, 0.9, 0.2, 1) !important;
+}
+
+.progress-step.active .step-circle {
+  background-color: var(--fluent-primary) !important;
+  border-color: var(--fluent-primary) !important;
+  color: var(--fluent-neutral-lightest) !important;
+}
+
+.progress-step.completed .step-circle {
+  background-color: var(--fluent-primary) !important;
+  border-color: var(--fluent-primary) !important;
+  color: var(--fluent-neutral-lightest) !important;
+}
+
+.progress-step.failed .step-circle {
+  background-color: var(--fluent-error-background) !important;
+  border-color: var(--fluent-error) !important;
+  color: var(--fluent-error) !important;
+}
+
+.step-label {
+  margin-top: var(--fluent-spacing-s) !important;
+  font-size: var(--fluent-font-size-12) !important;
+  color: var(--fluent-neutral-secondary) !important;
+}
+
+.progress-step.active .step-label {
+  color: var(--fluent-neutral-primary) !important;
+  font-weight: var(--fluent-font-weight-semibold) !important;
+}
+
+/* Fluent UI Focus Visible */
+*:focus-visible {
+  outline: 2px solid var(--fluent-primary) !important;
+  outline-offset: 2px !important;
+}
+
+/* Remove custom animations that conflict with Fluent UI */
+@keyframes float,
+@keyframes subtleMove {
+  0%, 100% { transform: none; }
+}
+
+/* Fluent UI Smooth Transitions */
+button, input, select, textarea, .card, .alert {
+  transition: background-color 0.1s cubic-bezier(0.1, 0.9, 0.2, 1), 
+              border-color 0.1s cubic-bezier(0.1, 0.9, 0.2, 1), 
+              color 0.1s cubic-bezier(0.1, 0.9, 0.2, 1),
+              box-shadow 0.2s cubic-bezier(0.1, 0.9, 0.2, 1) !important;
+}
