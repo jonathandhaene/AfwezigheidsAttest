@@ -11,10 +11,11 @@ from services.document_service import (
     validate_attestation_rules
 )
 from services.database_service import validate_doctor_in_database, create_fraud_case
+from services.message_translations import get_message
 from decorators.service_errors import ServiceCallError, format_service_error_for_ui
 
 
-def process_attestation(file_content: bytes, file_name: str) -> dict:
+def process_attestation(file_content: bytes, file_name: str, language: str = 'nl') -> dict:
     """
     Orchestrate the complete attestation processing workflow
     
@@ -29,6 +30,7 @@ def process_attestation(file_content: bytes, file_name: str) -> dict:
     Args:
         file_content: Binary content of the uploaded file
         file_name: Name of the uploaded file
+        language: UI language selection (nl/fr/en) for analyzer selection
         
     Returns:
         dict: Complete validation result with all details
@@ -36,13 +38,13 @@ def process_attestation(file_content: bytes, file_name: str) -> dict:
     try:
         # Step 1: Analyze document with Content Understanding
         logging.info(f"Step 1: Analyzing document: {file_name}")
-        analysis_result = analyze_document_with_content_understanding(file_content, file_name)
+        analysis_result = analyze_document_with_content_understanding(file_content, file_name, language)
         
         if not analysis_result.get("success"):
             # Analysis failed, return error
             return {
                 "valid": False,
-                "message": analysis_result.get("message", "Fout bij het analyseren van het document"),
+                "message": analysis_result.get("message", get_message("document_analysis_error", language)),
                 "details": {}
             }
         
@@ -52,11 +54,11 @@ def process_attestation(file_content: bytes, file_name: str) -> dict:
         
         # Step 3: Validate business rules (dates, signature)
         logging.info("Step 3: Validating business rules")
-        validation_errors = validate_attestation_rules(extracted_data)
+        validation_errors = validate_attestation_rules(extracted_data, language)
         
         # Step 4: Validate doctor in database
         logging.info("Step 4: Validating doctor in database")
-        doctor_validation = validate_doctor_in_database(extracted_data.get("doctor_info", {}))
+        doctor_validation = validate_doctor_in_database(extracted_data.get("doctor_info", {}), language)
         
         # Step 5: Determine if fraud case needs to be created
         fraud_detected = doctor_validation.get("fraud_detected", False)
@@ -68,11 +70,11 @@ def process_attestation(file_content: bytes, file_name: str) -> dict:
             logging.info("Step 5: Creating fraud case")
             
             if fraud_detected:
-                fraud_reason = "Arts niet gevonden in geregistreerde artsen database"
+                fraud_reason = get_message("fraud_reason_not_found", language)
             else:
                 fraud_reason = "; ".join(validation_errors)
             
-            fraud_case = create_fraud_case(extracted_data, fraud_reason, doctor_validation)
+            fraud_case = create_fraud_case(extracted_data, fraud_reason, doctor_validation, language)
             if fraud_case.get("success"):
                 fraud_case_id = fraud_case.get("case_id")
                 logging.info(f"Fraud case created: {fraud_case_id}")
@@ -84,7 +86,8 @@ def process_attestation(file_content: bytes, file_name: str) -> dict:
             validation_errors=validation_errors,
             doctor_validation=doctor_validation,
             fraud_case_id=fraud_case_id,
-            file_name=file_name
+            file_name=file_name,
+            language=language
         )
         
         return result
@@ -100,14 +103,14 @@ def process_attestation(file_content: bytes, file_name: str) -> dict:
         logging.error(f"Error in attestation workflow: {str(e)}")
         return {
             "valid": False,
-            "message": f"❌ Fout bij het verwerken van het document: {str(e)}",
+            "message": get_message("document_processing_error", language, error=str(e)),
             "details": {},
             "timestamp": datetime.now().isoformat()
         }
 
 
 def _build_result(extracted_data: dict, validation_errors: list, doctor_validation: dict, 
-                  fraud_case_id: str, file_name: str) -> dict:
+                  fraud_case_id: str, file_name: str, language: str = 'nl') -> dict:
     """
     Build the final result dictionary based on validation outcomes
     
@@ -117,6 +120,7 @@ def _build_result(extracted_data: dict, validation_errors: list, doctor_validati
         doctor_validation: Doctor validation result from database
         fraud_case_id: Fraud case ID if created, None otherwise
         file_name: Original filename
+        language: UI language selection (nl/fr/en) for message translations
         
     Returns:
         dict: Complete result with message and details
@@ -134,7 +138,7 @@ def _build_result(extracted_data: dict, validation_errors: list, doctor_validati
         "Adres patiënt": extracted_data.get("patient_address", ""),
         "Postcode en gemeente patiënt": extracted_data.get("patient_postal_code_city", ""),
         "Arts": extracted_data["doctor_info"].get("name", "Onbekend"),
-        "RIZIV Nummer": extracted_data["doctor_info"].get("riziv", "Niet gevonden"),
+        "RIZIV Nummer": extracted_data["doctor_info"].get("riziv", get_message("not_found", language)),
         "Adres arts": extracted_data["doctor_info"].get("address", ""),
         "Postcode en gemeente arts": extracted_data["doctor_info"].get("postal_code_city", ""),
         "Telefoonnummer arts": extracted_data["doctor_info"].get("phone", "")
@@ -155,7 +159,7 @@ def _build_result(extracted_data: dict, validation_errors: list, doctor_validati
         details["Samenvatting"] = extracted_data["summary"]
     
     if extracted_data.get("allowed_to_leave_house") is not None:
-        details["Mag huis verlaten"] = "Ja" if extracted_data["allowed_to_leave_house"] else "Nee"
+        details["Mag huis verlaten"] = get_message("yes", language) if extracted_data["allowed_to_leave_house"] else get_message("no", language)
     
     # Handle valid case
     if is_valid:
@@ -174,7 +178,7 @@ def _build_result(extracted_data: dict, validation_errors: list, doctor_validati
     
     # Fraud detected (doctor not found)
     if doctor_validation.get("fraud_detected"):
-        details["Reden"] = "Arts niet gevonden in geregistreerde artsen database"
+        details["Reden"] = get_message("fraud_reason_not_found", language)
         return {
             "valid": False,
             "message": "Het document is afgekeurd. De arts kon niet worden geverifieerd in onze database van geregistreerde artsen.",

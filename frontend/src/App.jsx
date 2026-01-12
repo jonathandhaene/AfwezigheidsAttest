@@ -58,6 +58,7 @@ function App() {
     try {
       const formData = new FormData()
       formData.append('file', selectedFile)
+      formData.append('language', language) // Send selected language to backend
 
       addProcessMessage(t('processStatus.fileSelected', { filename: selectedFile.name, size: (selectedFile.size / 1024).toFixed(2) }))
       addProcessMessage(t('processStatus.uploading'))

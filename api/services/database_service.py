@@ -9,11 +9,12 @@ import pyodbc
 import uuid
 from datetime import datetime
 from services.credentials_service import get_sql_token_struct
+from services.message_translations import get_message
 from decorators.service_errors import handle_service_errors
 
 
 @handle_service_errors("SQL Database")
-def validate_doctor_in_database(doctor_info: dict) -> dict:
+def validate_doctor_in_database(doctor_info: dict, language: str = 'nl') -> dict:
     """
     Validate doctor information against Azure SQL Database to detect fraud
     Uses Entra ID (Azure AD) authentication for secure access
@@ -25,6 +26,10 @@ def validate_doctor_in_database(doctor_info: dict) -> dict:
     
     If no match found → FRAUD
     If match found → VALID
+    
+    Args:
+        doctor_info: Dictionary with doctor information
+        language: UI language selection (nl/fr/en) for message translation
     """
     global _cached_db_credential
     
@@ -42,7 +47,7 @@ def validate_doctor_in_database(doctor_info: dict) -> dict:
         
         if not all([server, database]):
             logging.warning("SQL Server configuration incomplete")
-            validation_result["message"] = "Database configuratie ontbreekt - kan validatie niet uitvoeren"
+            validation_result["message"] = get_message("db_config_missing", language)
             return validation_result
         
         # Get Azure AD token for SQL Database using shared cached credential
@@ -85,7 +90,7 @@ def validate_doctor_in_database(doctor_info: dict) -> dict:
                 validation_result["doctor_found"] = True
                 validation_result["is_valid"] = True
                 validation_result["fraud_detected"] = False
-                validation_result["message"] = f"Arts geverifieerd via RIZIV nummer: {doctor_riziv}"
+                validation_result["message"] = get_message("doctor_verified_riziv", language, riziv=doctor_riziv)
                 logging.info(f"Doctor verified by RIZIV: {doctor_riziv}")
             else:
                 logging.warning(f"RIZIV number not found in database: {doctor_riziv}")
@@ -128,7 +133,7 @@ def validate_doctor_in_database(doctor_info: dict) -> dict:
                                 validation_result["doctor_found"] = True
                                 validation_result["is_valid"] = True
                                 validation_result["fraud_detected"] = False
-                                validation_result["message"] = f"Arts geverifieerd via naam en stad: {doctor_name}"
+                                validation_result["message"] = get_message("doctor_verified_name_city", language, name=doctor_name)
                                 logging.info(f"Doctor verified by name and city: {doctor_name}")
                             else:
                                 row_count = 0  # Reset if refined search fails
@@ -136,14 +141,14 @@ def validate_doctor_in_database(doctor_info: dict) -> dict:
                             validation_result["doctor_found"] = True
                             validation_result["is_valid"] = True
                             validation_result["fraud_detected"] = False
-                            validation_result["message"] = f"Arts geverifieerd via naam: {doctor_name}"
+                            validation_result["message"] = get_message("doctor_verified_name", language, name=doctor_name)
                             logging.info(f"Doctor verified by name: {doctor_name}")
         
         # Final result: If no match found anywhere → FRAUD
         if row_count == 0:
             validation_result["fraud_detected"] = True
             validation_result["is_valid"] = False
-            validation_result["message"] = "⚠️ FRAUDE GEDETECTEERD: Arts niet gevonden in geregistreerde artsendatabase"
+            validation_result["message"] = get_message("fraud_detected", language)
             if doctor_riziv:
                 validation_result["message"] += f" (RIZIV: {doctor_riziv})"
             elif doctor_name:
@@ -155,19 +160,25 @@ def validate_doctor_in_database(doctor_info: dict) -> dict:
         
     except pyodbc.Error as db_error:
         logging.error(f"Database error during doctor validation: {str(db_error)}")
-        validation_result["message"] = f"Database fout: {str(db_error)}"
+        validation_result["message"] = get_message("database_error", language, error=str(db_error))
     except Exception as e:
         logging.error(f"Error validating doctor: {str(e)}")
-        validation_result["message"] = f"Fout bij validatie: {str(e)}"
+        validation_result["message"] = get_message("validation_error", language, error=str(e))
     
     return validation_result
 
 
 @handle_service_errors("SQL Database")
-def create_fraud_case(extracted_data: dict, fraud_reason: str, doctor_validation: dict) -> dict:
+def create_fraud_case(extracted_data: dict, fraud_reason: str, doctor_validation: dict, language: str = 'nl') -> dict:
     """
     Create a fraud case in the database when document is invalid or doctor not found
     Raises ServiceCallError on timeout or connection issues
+    
+    Args:
+        extracted_data: Extracted document data
+        fraud_reason: Reason for fraud detection
+        doctor_validation: Doctor validation result
+        language: UI language selection (nl/fr/en) for message translation
     
     Returns:
         dict with case_id and success status
@@ -276,6 +287,7 @@ def create_fraud_case(extracted_data: dict, fraud_reason: str, doctor_validation
         
     except Exception as e:
         logging.error(f"Error creating fraud case: {str(e)}")
-        result["message"] = f"Fout bij aanmaken fraudemelding: {str(e)}"
+        result["success"] = False
+        result["message"] = get_message("fraud_case_creation_error", language, error=str(e))
         return result
 

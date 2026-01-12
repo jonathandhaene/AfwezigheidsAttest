@@ -9,6 +9,7 @@ from datetime import datetime, date
 from dateutil import parser
 from content_understanding_client import ContentUnderstandingClient
 from services.credentials_service import get_credential
+from services.message_translations import get_message
 from decorators.service_errors import handle_service_errors
 
 # Cache the client at module level to reuse across requests
@@ -16,10 +17,15 @@ _cached_client = None
 
 
 @handle_service_errors("Azure Content Understanding")
-def analyze_document_with_content_understanding(file_content: bytes, file_name: str) -> dict:
+def analyze_document_with_content_understanding(file_content: bytes, file_name: str, language: str = 'nl') -> dict:
     """
     Analyze document using Azure Content Understanding
     Raises ServiceCallError on timeout or connection issues
+    
+    Args:
+        file_content: Binary content of the document
+        file_name: Name of the document file
+        language: UI language selection (nl/fr/en) - appended to analyzer ID
     """
     global _cached_credential, _cached_client
     
@@ -27,13 +33,16 @@ def analyze_document_with_content_understanding(file_content: bytes, file_name: 
         # Get Azure Content Understanding configuration from environment
         endpoint = os.environ.get("AZURE_CONTENT_UNDERSTANDING_ENDPOINT")
         api_key = os.environ.get("AZURE_CONTENT_UNDERSTANDING_KEY")
-        analyzer_id = os.environ.get("AZURE_CONTENT_UNDERSTANDING_ANALYZER_ID", "prebuilt-layout")
+        base_analyzer_id = os.environ.get("AZURE_CONTENT_UNDERSTANDING_ANALYZER_ID", "prebuilt-layout")
+        
+        # Append language suffix to analyzer ID (e.g., "myanalyzer_nl", "myanalyzer_fr", "myanalyzer_en")
+        analyzer_id = f"{base_analyzer_id}_{language}"
         
         if not endpoint:
             logging.warning("Azure Content Understanding endpoint not configured")
             return {
                 "valid": False,
-                "message": "Azure Content Understanding is niet geconfigureerd. Configureer de omgevingsvariabele AZURE_CONTENT_UNDERSTANDING_ENDPOINT.",
+                "message": get_message("azure_ai_not_configured", language),
                 "details": {}
             }
         
@@ -68,7 +77,7 @@ def analyze_document_with_content_understanding(file_content: bytes, file_name: 
         logging.error(f"Configuration error: {str(e)}")
         return {
             "success": False,
-            "message": f"Configuratiefout: {str(e)}"
+            "message": get_message("configuration_error", language, error=str(e))
         }
     # All other exceptions (timeouts, connection errors, etc.) are handled by the decorator
 
@@ -174,10 +183,14 @@ def extract_document_info(result: dict) -> dict:
     return extracted_data
 
 
-def validate_attestation_rules(extracted_data: dict) -> list:
+def validate_attestation_rules(extracted_data: dict, language: str = 'nl') -> list:
     """
     Validate business rules (dates, signature) without external dependencies
     Returns list of validation error messages
+    
+    Args:
+        extracted_data: Extracted document data
+        language: UI language selection (nl/fr/en) for error messages
     """
     today = date.today()
     validation_errors = []
@@ -188,7 +201,7 @@ def validate_attestation_rules(extracted_data: dict) -> list:
             start_date = parser.parse(extracted_data["incapacity_start_date"]).date()
             if start_date > today:
                 validation_errors.append(
-                    f"Onmogelijheid startdatum ligt in de toekomst: {start_date.strftime('%d-%m-%Y')}"
+                    get_message("validation_start_date_future", language, date=start_date.strftime('%d-%m-%Y'))
                 )
         except (ValueError, TypeError, parser.ParserError) as e:
             logging.warning(f"Could not parse incapacity start date: {e}")
@@ -208,13 +221,13 @@ def validate_attestation_rules(extracted_data: dict) -> list:
             cert_date = parser.parse(extracted_data["certificate_date"]).date()
             if cert_date > today:
                 validation_errors.append(
-                    f"Certificaat datum ligt in de toekomst: {cert_date.strftime('%d-%m-%Y')}"
+                    get_message("validation_cert_date_future", language, date=cert_date.strftime('%d-%m-%Y'))
                 )
         except (ValueError, TypeError, parser.ParserError) as e:
             logging.warning(f"Could not parse certificate date: {e}")
     
     # Check for signature
     if not extracted_data["has_signature"]:
-        validation_errors.append("Er ontbreekt een handtekening van de arts op het document")
+        validation_errors.append(get_message("validation_signature_missing", language))
     
     return validation_errors

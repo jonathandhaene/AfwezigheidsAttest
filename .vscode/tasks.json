@@ -3,13 +3,18 @@
 	"tasks": [
 		{
 			"type": "func",
-			"label": "func: host start",
+			"label": "Start Azure Function",
 			"command": "host start",
 			"problemMatcher": "$func-python-watch",
 			"isBackground": true,
 			"dependsOn": "pip install (functions)",
 			"options": {
 				"cwd": "${workspaceFolder}/api"
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"group": "dev"
 			}
 		},
 		{
@@ -27,6 +32,53 @@
 			"problemMatcher": [],
 			"options": {
 				"cwd": "${workspaceFolder}/api"
+			}
+		},
+		{
+			"label": "npm install (frontend)",
+			"type": "shell",
+			"command": "npm install",
+			"problemMatcher": [],
+			"options": {
+				"cwd": "${workspaceFolder}/frontend"
+			}
+		},
+		{
+			"label": "Start Frontend",
+			"type": "shell",
+			"command": "npm run dev",
+			"isBackground": true,
+			"problemMatcher": {
+				"owner": "custom",
+				"pattern": {
+					"regexp": "^.*$"
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": ".*VITE.*",
+					"endsPattern": ".*Local:.*http://localhost:5173/.*"
+				}
+			},
+			"dependsOn": "npm install (frontend)",
+			"options": {
+				"cwd": "${workspaceFolder}/frontend"
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"group": "dev"
+			}
+		},
+		{
+			"label": "Start Application",
+			"dependsOn": [
+				"Start Azure Function",
+				"Start Frontend"
+			],
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated"
 			}
 		}
 	]

@@ -8,6 +8,7 @@ import logging
 import json
 from datetime import datetime
 from controllers.attestation_controller import process_attestation as process_attestation_controller
+from services.message_translations import get_message
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
@@ -40,9 +41,12 @@ def process_attestation(req: func.HttpRequest) -> func.HttpResponse:
         # Get the uploaded file
         file = req.files.get('file')
         
+        # Get language from form data (default to 'nl' if not provided)
+        language = req.form.get('language', 'nl')
+        
         if not file:
             return func.HttpResponse(
-                json.dumps({"error": "Geen bestand geüpload"}),
+                json.dumps({"error": get_message("no_file_uploaded", language)}),
                 mimetype="application/json",
                 status_code=400
             )
@@ -52,10 +56,10 @@ def process_attestation(req: func.HttpRequest) -> func.HttpResponse:
         file_name = file.filename
         file_size = len(file_content)
         
-        logging.info(f"Received file: {file_name}, size: {file_size} bytes")
+        logging.info(f"Received file: {file_name}, size: {file_size} bytes, language: {language}")
         
         # Process attestation through controller (orchestration layer)
-        validation_result = process_attestation_controller(file_content, file_name)
+        validation_result = process_attestation_controller(file_content, file_name, language)
         
         # Add file size to details
         if "details" in validation_result:
@@ -71,9 +75,11 @@ def process_attestation(req: func.HttpRequest) -> func.HttpResponse:
         
     except Exception as e:
         logging.error(f"Error processing attestation: {str(e)}")
+        # Try to get language, default to 'nl' if not available
+        language = req.form.get('language', 'nl') if hasattr(req, 'form') else 'nl'
         return func.HttpResponse(
             json.dumps({
-                "error": "Fout bij het verwerken van het bestand",
+                "error": get_message("file_processing_error", language),
                 "message": str(e)
             }),
             mimetype="application/json",
