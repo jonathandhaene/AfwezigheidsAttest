@@ -15,6 +15,15 @@
     "processing": "Processing...",
     "error": "Please select a file first"
   },
+  "auth": {
+    "checking": "Checking authentication...",
+    "required": "Login Required",
+    "description": "You must log in with your Azure account before you can upload files. Click the button below to log in.",
+    "login": "Login with Azure",
+    "loggingIn": "Logging in...",
+    "loginFailed": "Login failed. Please try again.",
+    "loginError": "An error occurred during login."
+  },
   "steps": {
     "uploading": "Uploading",
     "analyzing": "Analysing",

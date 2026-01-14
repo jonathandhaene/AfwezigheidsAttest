@@ -82,16 +82,61 @@ def validate_doctor_in_database(doctor_info: dict, language: str = 'nl') -> dict
         
         # Strategy 1: Search by RIZIV number (most reliable)
         if doctor_riziv:
-            query = "SELECT COUNT(*) FROM dbo.doctors_riziv WHERE riziv_number = ?"
+            query = "SELECT first_name, last_name FROM dbo.doctors_riziv WHERE riziv_number = ?"
             cursor.execute(query, (doctor_riziv,))
-            row_count = cursor.fetchone()[0]
+            db_doctor = cursor.fetchone()
             
-            if row_count > 0:
-                validation_result["doctor_found"] = True
-                validation_result["is_valid"] = True
-                validation_result["fraud_detected"] = False
-                validation_result["message"] = get_message("doctor_verified_riziv", language, riziv=doctor_riziv)
-                logging.info(f"Doctor verified by RIZIV: {doctor_riziv}")
+            if db_doctor:
+                # RIZIV found - now verify the name matches
+                db_first_name = (db_doctor[0] or "").strip()
+                db_last_name = (db_doctor[1] or "").strip()
+                db_full_name = f"{db_first_name} {db_last_name}".strip()
+                
+                # Clean and normalize names for comparison (remove titles, convert to uppercase)
+                doc_name_clean = doctor_name.replace("Dr.", "").replace("Arts", "").replace("Doctor", "").replace(".", "").strip() if doctor_name else ""
+                
+                # Split document name into parts
+                doc_name_parts = [part.upper() for part in doc_name_clean.split() if part]
+                db_first_upper = db_first_name.upper()
+                db_last_upper = db_last_name.upper()
+                
+                # Strict name matching: both first AND last name must match
+                # Account for potential name order variations (FirstName LastName or LastName FirstName)
+                name_matches = False
+                
+                if db_first_upper and db_last_upper and len(doc_name_parts) >= 2:
+                    # Check if both first and last name appear in document (in any order)
+                    has_first_name = db_first_upper in doc_name_parts
+                    has_last_name = db_last_upper in doc_name_parts
+                    
+                    if has_first_name and has_last_name:
+                        name_matches = True
+                        logging.info(f"Name match confirmed: Document='{doctor_name}' contains both '{db_first_name}' and '{db_last_name}'")
+                    else:
+                        logging.warning(f"Name mismatch: Document='{doctor_name}' (parts: {doc_name_parts}) vs DB first='{db_first_name}' last='{db_last_name}'")
+                elif not db_first_upper and db_last_upper:
+                    # Only last name in database - check if it matches
+                    name_matches = db_last_upper in doc_name_parts
+                    if name_matches:
+                        logging.info(f"Last name match (no first name in DB): '{db_last_name}' in '{doctor_name}'")
+                
+                if name_matches:
+                    # Name matches - doctor verified
+                    validation_result["doctor_found"] = True
+                    validation_result["is_valid"] = True
+                    validation_result["fraud_detected"] = False
+                    validation_result["message"] = get_message("doctor_verified_riziv", language, riziv=doctor_riziv)
+                    logging.info(f"✓ Doctor verified by RIZIV: {doctor_riziv}, name matches: '{doctor_name}' ≈ '{db_full_name}'")
+                    row_count = 1
+                else:
+                    # RIZIV exists but name doesn't match - FRAUD!
+                    validation_result["doctor_found"] = False
+                    validation_result["is_valid"] = False
+                    validation_result["fraud_detected"] = True
+                    validation_result["fraud_type"] = "name_mismatch"
+                    validation_result["message"] = get_message("fraud_name_mismatch", language, doc_name=doctor_name, db_name=db_full_name)
+                    logging.error(f"✗ FRAUD DETECTED - RIZIV {doctor_riziv} exists but name mismatch: Document='{doctor_name}' vs Database='{db_full_name}'")
+                    row_count = 0  # Treat as not found for fraud case creation
             else:
                 logging.warning(f"RIZIV number not found in database: {doctor_riziv}")
         

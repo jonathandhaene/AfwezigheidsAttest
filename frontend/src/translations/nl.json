@@ -15,6 +15,15 @@
     "processing": "Verwerken...",
     "error": "Selecteer eerst een bestand"
   },
+  "auth": {
+    "checking": "Authenticatie controleren...",
+    "required": "Inloggen Vereist",
+    "description": "U moet inloggen met uw Azure account voordat u bestanden kunt uploaden. Klik op de knop hieronder om in te loggen.",
+    "login": "Inloggen met Azure",
+    "loggingIn": "Bezig met inloggen...",
+    "loginFailed": "Inloggen mislukt. Probeer het opnieuw.",
+    "loginError": "Er is een fout opgetreden tijdens het inloggen."
+  },
   "steps": {
     "uploading": "Uploaden",
     "analyzing": "Analyseren",

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTranslation } from './i18n.jsx'
 import './App.css'
 
@@ -12,6 +12,48 @@ function App() {
   const [failedStep, setFailedStep] = useState(null) // Track which step failed
   const [processMessages, setProcessMessages] = useState([]) // Activity log messages
   const [isProcessCollapsed, setIsProcessCollapsed] = useState(false) // Collapse state for process steps
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
+
+  // Check authentication status on component mount
+  useEffect(() => {
+    checkAuthStatus()
+  }, [])
+
+  const checkAuthStatus = async () => {
+    setIsCheckingAuth(true)
+    try {
+      const response = await fetch('/api/auth-check')
+      const data = await response.json()
+      setIsAuthenticated(data.authenticated)
+    } catch (err) {
+      console.error('Auth check failed:', err)
+      setIsAuthenticated(false)
+    } finally {
+      setIsCheckingAuth(false)
+    }
+  }
+
+  const handleLogin = async () => {
+    setIsLoggingIn(true)
+    setError(null)
+    try {
+      const response = await fetch('/api/login', { method: 'POST' })
+      const data = await response.json()
+      
+      if (data.success) {
+        setIsAuthenticated(true)
+      } else {
+        setError(t('auth.loginFailed'))
+      }
+    } catch (err) {
+      console.error('Login failed:', err)
+      setError(t('auth.loginError'))
+    } finally {
+      setIsLoggingIn(false)
+    }
+  }
 
   const handleLanguageChange = (newLanguage) => {
     setLanguage(newLanguage)
@@ -173,6 +215,40 @@ function App() {
                   </p>
                 </div>
 
+                {/* Authentication Check */}
+                {isCheckingAuth ? (
+                  <div className="alert alert-secondary text-center" role="alert">
+                    <div className="spinner-border spinner-border-sm me-2" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    {t('auth.checking')}
+                  </div>
+                ) : !isAuthenticated ? (
+                  <div className="alert alert-warning" role="alert">
+                    <h5 className="alert-heading">{t('auth.required')}</h5>
+                    <p className="mb-3">{t('auth.description')}</p>
+                    <button 
+                      className="btn btn-primary"
+                      onClick={handleLogin}
+                      disabled={isLoggingIn}
+                    >
+                      {isLoggingIn ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                          </span>
+                          {t('auth.loggingIn')}
+                        </>
+                      ) : (
+                        t('auth.login')
+                      )}
+                    </button>
+                  </div>
+                ) : null}
+
+                {/* File Upload Section - Only show when authenticated */}
+                {isAuthenticated && (
+                  <>
                 <div className="mb-4">
                   <label htmlFor="fileInput" className="form-label fw-bold">
                     {t('upload.label')}
@@ -568,6 +644,9 @@ function App() {
                     </div>
                   </div>
                 )}
+                </>
+              )}
+              {/* End of authenticated section */}
               </div>
             </div>
           </div>

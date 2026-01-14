@@ -12,6 +12,34 @@ from azure.identity import InteractiveBrowserCredential
 _cached_credential = None
 
 
+def clear_credential():
+    """
+    Clear the cached credential to force a fresh authentication
+    """
+    global _cached_credential
+    _cached_credential = None
+    logging.info("Cleared cached Azure AD credential")
+
+
+def is_authenticated():
+    """
+    Check if user is already authenticated without triggering interactive login
+    Returns True if credentials exist and have a valid cached token
+    """
+    global _cached_credential
+    
+    if _cached_credential is None:
+        return False
+    
+    try:
+        # Try to get token without interactive prompt (use cached token only)
+        token = _cached_credential.get_token("https://database.windows.net/.default")
+        return token is not None and token.token is not None
+    except Exception as e:
+        logging.debug(f"Token check failed: {str(e)}")
+        return False
+
+
 def get_credential():
     """
     Get or create the cached Azure AD credential

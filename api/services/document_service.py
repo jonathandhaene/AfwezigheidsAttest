@@ -12,6 +12,9 @@ from services.credentials_service import get_credential
 from services.message_translations import get_message
 from decorators.service_errors import handle_service_errors
 
+# Configuration
+SIGNATURE_CONFIDENCE_THRESHOLD = 0.7  # Confidence threshold for signature detection
+
 # Cache the client at module level to reuse across requests
 _cached_client = None
 
@@ -146,9 +149,30 @@ def extract_document_info(result: dict) -> dict:
         if "CertificateDate" in fields:
             extracted_data["certificate_date"] = fields["CertificateDate"].get("valueDate", None)
         
-        # Extract doctor signature and patient restrictions
+        # Extract doctor signature with confidence check
         if "DoctorHasSigned" in fields:
-            extracted_data["has_signature"] = fields["DoctorHasSigned"].get("valueBoolean", False)
+            signature_field = fields["DoctorHasSigned"]
+            signature_value = signature_field.get("valueBoolean", False)
+            signature_confidence = signature_field.get("confidence", 1.0)  # Default to 1.0 if not present
+            
+            # # Apply confidence threshold logic (DISABLED - using AI value as-is)
+            # if signature_confidence < SIGNATURE_CONFIDENCE_THRESHOLD:
+            #     # Low confidence: invert the value (conservative approach)
+            #     # If True with low confidence → treat as False (reject uncertain signature)
+            #     # If False with low confidence → treat as True (assume signature exists when unsure)
+            #     extracted_data["has_signature"] = not signature_value
+            #     logging.warning(
+            #         f"Signature confidence too low: {signature_confidence:.2%} < {SIGNATURE_CONFIDENCE_THRESHOLD:.0%} threshold. "
+            #         f"Original value: {signature_value}, adjusted to: {not signature_value}"
+            #     )
+            # else:
+            #     # High confidence: use the detected value
+            #     extracted_data["has_signature"] = signature_value
+            #     logging.info(f"Signature {'detected' if signature_value else 'not detected'} with confidence: {signature_confidence:.2%} (threshold: {SIGNATURE_CONFIDENCE_THRESHOLD:.0%})")
+            
+            # Use AI detected value directly without confidence adjustment
+            extracted_data["has_signature"] = signature_value
+            logging.info(f"Signature {'detected' if signature_value else 'not detected'} with confidence: {signature_confidence:.2%}")
         
         if "IsAllowedToLeaveHouse" in fields:
             extracted_data["allowed_to_leave_house"] = fields["IsAllowedToLeaveHouse"].get("valueBoolean", None)

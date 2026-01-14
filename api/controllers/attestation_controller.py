@@ -70,7 +70,11 @@ def process_attestation(file_content: bytes, file_name: str, language: str = 'nl
             logging.info("Step 5: Creating fraud case")
             
             if fraud_detected:
-                fraud_reason = get_message("fraud_reason_not_found", language)
+                # Check if it's a name mismatch fraud or doctor not found
+                if doctor_validation.get("fraud_type") == "name_mismatch":
+                    fraud_reason = get_message("fraud_reason_name_mismatch", language)
+                else:
+                    fraud_reason = get_message("fraud_reason_not_found", language)
             else:
                 fraud_reason = "; ".join(validation_errors)
             
@@ -163,10 +167,6 @@ def _build_result(extracted_data: dict, validation_errors: list, doctor_validati
     
     # Handle valid case
     if is_valid:
-        # Add doctor verification message as warning
-        if doctor_validation.get("message") and doctor_validation.get("doctor_found"):
-            details["Waarschuwingen"] = [doctor_validation["message"]]
-        
         return {
             "valid": True,
             "message": "Uw afwezigheidsattest is geldig en goedgekeurd.",

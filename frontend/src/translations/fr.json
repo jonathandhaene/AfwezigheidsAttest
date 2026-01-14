@@ -15,6 +15,15 @@
     "processing": "Traitement en cours...",
     "error": "Veuillez d'abord sélectionner un fichier"
   },
+  "auth": {
+    "checking": "Vérification de l'authentification...",
+    "required": "Connexion Requise",
+    "description": "Vous devez vous connecter avec votre compte Azure avant de pouvoir télécharger des fichiers. Cliquez sur le bouton ci-dessous pour vous connecter.",
+    "login": "Se connecter avec Azure",
+    "loggingIn": "Connexion en cours...",
+    "loginFailed": "Échec de la connexion. Veuillez réessayer.",
+    "loginError": "Une erreur s'est produite lors de la connexion."
+  },
   "steps": {
     "uploading": "Téléchargement",
     "analyzing": "Analyse",

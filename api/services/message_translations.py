@@ -25,10 +25,20 @@ MESSAGES = {
         "fr": "⚠️ FRAUDE DÉTECTÉE: Médecin non trouvé dans la base de données des médecins enregistrés",
         "en": "⚠️ FRAUD DETECTED: Doctor not found in registered doctors database"
     },
+    "fraud_name_mismatch": {
+        "nl": "⚠️ FRAUDE GEDETECTEERD: RIZIV nummer bestaat maar naam komt niet overeen (Document: {doc_name}, Database: {db_name})",
+        "fr": "⚠️ FRAUDE DÉTECTÉE: Numéro INAMI existe mais le nom ne correspond pas (Document: {doc_name}, Base de données: {db_name})",
+        "en": "⚠️ FRAUD DETECTED: RIZIV number exists but name does not match (Document: {doc_name}, Database: {db_name})"
+    },
     "fraud_reason_not_found": {
         "nl": "Arts niet gevonden in geregistreerde artsen database",
         "fr": "Médecin non trouvé dans la base de données des médecins enregistrés",
         "en": "Doctor not found in registered doctors database"
+    },
+    "fraud_reason_name_mismatch": {
+        "nl": "RIZIV nummer geldig maar arts naam komt niet overeen met database",
+        "fr": "Numéro INAMI valide mais le nom du médecin ne correspond pas à la base de données",
+        "en": "RIZIV number valid but doctor name does not match database"
     },
     
     # Error messages
