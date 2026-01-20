@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { useTranslation } from './i18n.jsx'
 import './App.css'
 
+// API base URL - uses environment or falls back to relative path for local dev
+const API_BASE_URL = import.meta.env.PROD 
+  ? 'https://func-afwezigheidsattest-jky427lqw4l2o.azurewebsites.net'
+  : ''
+
 function App() {
   const { t, language, setLanguage } = useTranslation()
   const [selectedFile, setSelectedFile] = useState(null)
@@ -24,7 +29,7 @@ function App() {
   const checkAuthStatus = async () => {
     setIsCheckingAuth(true)
     try {
-      const response = await fetch('/api/auth-check')
+      const response = await fetch(`${API_BASE_URL}/api/auth-check`)
       const data = await response.json()
       setIsAuthenticated(data.authenticated)
     } catch (err) {
@@ -39,7 +44,7 @@ function App() {
     setIsLoggingIn(true)
     setError(null)
     try {
-      const response = await fetch('/api/login', { method: 'POST' })
+      const response = await fetch(`${API_BASE_URL}/api/login`, { method: 'POST' })
       const data = await response.json()
       
       if (data.success) {
@@ -106,7 +111,7 @@ function App() {
       addProcessMessage(t('processStatus.uploading'))
       
       // Start the API call - this will take a long time (includes upload + analysis + validation)
-      const responsePromise = fetch('/api/process-attestation', {
+      const responsePromise = fetch(`${API_BASE_URL}/api/process-attestation`, {
         method: 'POST',
         body: formData
       })

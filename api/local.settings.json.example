@@ -4,7 +4,9 @@
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "python",
     "AzureWebJobsFeatureFlags": "EnableWorkerIndexing",
+    "AZURE_TENANT_ID": "your-tenant-id",
     "AZURE_CONTENT_UNDERSTANDING_ENDPOINT": "https://your-resource-name.services.ai.azure.com/",
+    "AZURE_CONTENT_UNDERSTANDING_KEY": "your-api-key-optional-for-local-dev",
     "AZURE_CONTENT_UNDERSTANDING_ANALYZER_ID": "your-analyzer-id",
     "SQL_SERVER": "your-sql-server.database.windows.net",
     "SQL_DATABASE": "your-database-name"

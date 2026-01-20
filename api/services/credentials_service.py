@@ -1,15 +1,31 @@
 """
 Credentials Service - Centralized Authentication Management
 Provides cached Azure AD credentials for all services
+
+IMPORTANT: Uses different credential types for local vs Azure environments:
+- Local development: InteractiveBrowserCredential (opens browser for login)
+- Azure Functions: DefaultAzureCredential (uses Managed Identity)
 """
 
 import logging
 import os
 import struct
-from azure.identity import InteractiveBrowserCredential
+from azure.identity import DefaultAzureCredential, InteractiveBrowserCredential
 
 # Single cached credential shared across all services
 _cached_credential = None
+
+
+def _is_running_in_azure():
+    """
+    Detect if running in Azure Functions environment
+    """
+    # Azure Functions sets these environment variables
+    return (
+        os.environ.get("WEBSITE_INSTANCE_ID") is not None or
+        os.environ.get("FUNCTIONS_WORKER_RUNTIME") is not None and
+        os.environ.get("HOME", "").startswith("/home")
+    )
 
 
 def clear_credential():
@@ -43,14 +59,29 @@ def is_authenticated():
 def get_credential():
     """
     Get or create the cached Azure AD credential
-    Returns the same credential instance for all calls
+    
+    Uses DefaultAzureCredential in Azure (Managed Identity) 
+    and InteractiveBrowserCredential locally (opens browser)
     """
     global _cached_credential
     
     if _cached_credential is None:
-        tenant_id = os.environ.get("AZURE_TENANT_ID", "a3bf65f3-481b-404c-b69d-67e5bd9911af")
-        logging.info(f"Creating cached Azure AD credential for tenant: {tenant_id}")
-        _cached_credential = InteractiveBrowserCredential(tenant_id=tenant_id)
+        tenant_id = os.environ.get("AZURE_TENANT_ID")
+        
+        if _is_running_in_azure():
+            # Running in Azure - use Managed Identity via DefaultAzureCredential
+            logging.info("Running in Azure - using DefaultAzureCredential (Managed Identity)")
+            _cached_credential = DefaultAzureCredential(
+                exclude_interactive_browser_credential=True,
+                exclude_shared_token_cache_credential=True
+            )
+        else:
+            # Local development - use interactive browser login
+            logging.info(f"Running locally - using InteractiveBrowserCredential for tenant: {tenant_id}")
+            if tenant_id:
+                _cached_credential = InteractiveBrowserCredential(tenant_id=tenant_id)
+            else:
+                _cached_credential = InteractiveBrowserCredential()
     
     return _cached_credential
 

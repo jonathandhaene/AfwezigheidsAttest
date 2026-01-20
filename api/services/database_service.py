@@ -54,8 +54,20 @@ def validate_doctor_in_database(doctor_info: dict, language: str = 'nl') -> dict
         token_struct = get_sql_token_struct()
         
         # SQL Server connection string with Azure AD authentication
+        # Try ODBC Driver 18 first, fall back to 17 for local development
+        odbc_driver = "ODBC Driver 18 for SQL Server"
+        
+        # Check if Driver 18 exists, otherwise use Driver 17
+        available_drivers = pyodbc.drivers()
+        if odbc_driver not in available_drivers:
+            if "ODBC Driver 17 for SQL Server" in available_drivers:
+                odbc_driver = "ODBC Driver 17 for SQL Server"
+                logging.info("Using ODBC Driver 17 (Driver 18 not found)")
+            else:
+                raise Exception(f"No compatible SQL Server ODBC driver found. Available: {available_drivers}")
+        
         connection_string = (
-            f"Driver={{ODBC Driver 17 for SQL Server}};"
+            f"Driver={{{odbc_driver}}};"
             f"Server=tcp:{server},1433;"
             f"Database={database};"
             f"Encrypt=yes;"
@@ -248,8 +260,20 @@ def create_fraud_case(extracted_data: dict, fraud_reason: str, doctor_validation
         token_struct = get_sql_token_struct()
         
         # SQL Server connection string
+        # Try ODBC Driver 18 first, fall back to 17 for local development
+        odbc_driver = "ODBC Driver 18 for SQL Server"
+        
+        # Check if Driver 18 exists, otherwise use Driver 17
+        available_drivers = pyodbc.drivers()
+        if odbc_driver not in available_drivers:
+            if "ODBC Driver 17 for SQL Server" in available_drivers:
+                odbc_driver = "ODBC Driver 17 for SQL Server"
+                logging.info("Using ODBC Driver 17 (Driver 18 not found)")
+            else:
+                raise Exception(f"No compatible SQL Server ODBC driver found. Available: {available_drivers}")
+        
         connection_string = (
-            f"Driver={{ODBC Driver 17 for SQL Server}};"
+            f"Driver={{{odbc_driver}}};"
             f"Server=tcp:{server},1433;"
             f"Database={database};"
             f"Encrypt=yes;"

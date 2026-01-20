@@ -10,7 +10,7 @@ from datetime import datetime
 from controllers.attestation_controller import process_attestation as process_attestation_controller
 from services.message_translations import get_message
 
-app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
+app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 
 @app.route(route="health", methods=["GET"])
@@ -33,98 +33,31 @@ def auth_check(req: func.HttpRequest) -> func.HttpResponse:
     """
     Authentication check endpoint
     GET /api/auth-check
-    Verifies if user credentials are available and valid
+    For now, always returns authenticated=true (no real auth implemented)
     """
-    logging.info('Authentication check endpoint called')
+    logging.info('Auth check endpoint called')
     
-    try:
-        from services.credentials_service import is_authenticated
-        
-        # Check if user is already authenticated without triggering login
-        if is_authenticated():
-            logging.info('User is authenticated')
-            return func.HttpResponse(
-                json.dumps({
-                    "authenticated": True,
-                    "message": "User is authenticated"
-                }),
-                mimetype="application/json",
-                status_code=200
-            )
-        else:
-            logging.info('User is not authenticated')
-            return func.HttpResponse(
-                json.dumps({
-                    "authenticated": False,
-                    "message": "Authentication required"
-                }),
-                mimetype="application/json",
-                status_code=200  # Return 200 with authenticated=false (not an error)
-            )
-            
-    except Exception as e:
-        logging.error(f"Authentication check failed: {str(e)}")
-        return func.HttpResponse(
-            json.dumps({
-                "authenticated": False,
-                "message": "Authentication check failed",
-                "error": str(e)
-            }),
-            mimetype="application/json",
-            status_code=200  # Return 200 with authenticated=false
-        )
+    return func.HttpResponse(
+        json.dumps({"authenticated": True}),
+        mimetype="application/json",
+        status_code=200
+    )
 
 
 @app.route(route="login", methods=["POST"])
 def login(req: func.HttpRequest) -> func.HttpResponse:
     """
-    Login endpoint - triggers interactive browser authentication
+    Login endpoint
     POST /api/login
+    For now, always returns success (no real auth implemented)
     """
     logging.info('Login endpoint called')
     
-    try:
-        from services.credentials_service import get_credential, clear_credential
-        
-        # Clear cached credential to force fresh authentication and avoid state mismatch
-        clear_credential()
-        
-        # Trigger authentication by requesting a token
-        credential = get_credential()
-        token = credential.get_token("https://database.windows.net/.default")
-        
-        if token and token.token:
-            logging.info('User successfully authenticated')
-            return func.HttpResponse(
-                json.dumps({
-                    "success": True,
-                    "message": "Successfully authenticated"
-                }),
-                mimetype="application/json",
-                status_code=200
-            )
-        else:
-            logging.error('Authentication failed - no token received')
-            return func.HttpResponse(
-                json.dumps({
-                    "success": False,
-                    "message": "Authentication failed"
-                }),
-                mimetype="application/json",
-                status_code=401
-            )
-            
-    except Exception as e:
-        logging.error(f"Login failed: {str(e)}")
-        return func.HttpResponse(
-            json.dumps({
-                "success": False,
-                "message": "Authentication failed",
-                "error": str(e)
-            }),
-            mimetype="application/json",
-            status_code=401
-        )
+    return func.HttpResponse(
+        json.dumps({"success": True}),
+        mimetype="application/json",
+        status_code=200
+    )
 
 
 @app.route(route="process-attestation", methods=["POST"])
